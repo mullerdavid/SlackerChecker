@@ -1,0 +1,164 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<!--Script file="SlackerChecker.lua"/-->
+	<Frame name="SlackerChecker_MenuEntry" virtual="true">
+		<Size x="200" y="32"/>
+		<Anchors>
+			<Anchor x="0" y="0"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Background" setAllPoints="true" hidden="true">
+					<Color r="1" g="1" b="1" a="0.3"/>
+				</Texture>
+				<Texture parentKey="Selected" setAllPoints="true" hidden="true">
+					<Color r="1" g="1" b="1" a="0.3"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString inherits="GameFontHighlight" parentKey="DateTime" >
+					<Anchors>
+						<Anchor point="TOPLEFT" x="2" y="-2" />
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" parentKey="Instance" >
+					<Anchors>
+						<Anchor point="TOPLEFT" x="2" y="-16" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button inherits="UIPanelSquareButton" parentKey="DeleteButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset x="0" y="-3"/>
+					</Anchor> 
+				</Anchors>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnEnter> self.Background:Show() </OnEnter>
+			<OnLeave> self.Background:Hide() </OnLeave>
+		</Scripts>
+ 	</Frame>
+	<Frame name="SlackerChecker_PlayerEntry" virtual="true">
+		<Size x="510" y="16"/>
+		<Anchors>
+			<Anchor x="0" y="0"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Background" setAllPoints="true" hidden="true">
+					<Color r="1" g="1" b="1" a="0.3"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString inherits="GameFontHighlight" parentKey="Player" >
+					<Anchors>
+						<Anchor point="TOPLEFT" x="2" y="-2" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<!--Scripts>
+			<OnEnter> self.Background:Show() </OnEnter>
+			<OnLeave> self.Background:Hide() </OnLeave>
+		</Scripts-->
+ 	</Frame>
+	<Frame name="SlackerChecker_Frame" parent="UIParent" toplevel="true" hidden="true" enableMouse="true">
+		<Scripts>
+			<OnShow function="SlackerChecker_Frame_OnShow"/>
+        </Scripts>
+		<Size>
+			<AbsDimension x="1024" y="640" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" />
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		<Frames>
+			<Button name="$parent_ButtonClose" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset x="-4" y="-4"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnClick> self:GetParent():Hide(); </OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonRefresh" inherits="UIPanelButtonTemplate" text="Refresh">
+				<Anchors>
+					<Anchor point="TOPLeft">
+						<Offset x="12" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="64" y="16" />
+				</Size>
+				<Scripts>
+					<OnClick function="SlackerChecker_Frame_OnShow"/>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonReset" inherits="UIPanelButtonTemplate" text="Reset">
+				<Anchors>
+					<Anchor point="TOPLeft">
+						<Offset x="96" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="64" y="16" />
+				</Size>
+				<Scripts>
+					<OnClick function="SlackerChecker_Frame_Reset"/>
+				</Scripts>
+			</Button>
+			<ScrollFrame name="$parent_InstanceList" inherits="UIPanelScrollFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="16" y="-32"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="16" y="16"/>
+					<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent" x="216"/>
+				</Anchors>
+				<ScrollChild>
+					<Frame name="$parent_ScrollChild">
+						<Size x="200" y="100"/>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			<ScrollFrame name="$parent_DataList" inherits="UIPanelScrollFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="248" y="-32"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="248" y="16"/>
+					<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent" x="448"/>
+				</Anchors>
+				<ScrollChild>
+					<Frame name="$parent_ScrollChild">
+						<Size x="200" y="100"/>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+			<ScrollFrame name="$parent_PlayerList" inherits="UIPanelScrollFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="480" y="-32"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="480" y="16"/>
+					<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parent" x="-36"/>
+				</Anchors>
+				<ScrollChild>
+					<Frame name="$parent_ScrollChild">
+						<Size x="510" y="100"/>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+		</Frames>
+	</Frame>
+</Ui>
