@@ -19,6 +19,7 @@ SlackerChecker_DB = {
 		["ver"] = str, -- addon version
 		["date"] = datetime, -- first encounter, ordered by this
 		["iid"] = int, -- instance id
+		["iname"] = str, -- instance
 		["reset"] = datetime, -- reset timer
 		["owner"] = str, -- creator character
 		["data"] = { -- data entries
@@ -31,6 +32,7 @@ SlackerChecker_DB = {
 						["o"] = int, -- online 0/1
 						["g"] = int, -- group
 						["n"] = str, -- name
+						["c"] = str, -- class, localized
 						["b"] = { -- active buffs
 							{
 								["id"] =  int, -- spell id
@@ -65,25 +67,26 @@ local function LastRaidInfo()
 		SlackerChecker_LastRaidInstance = {}
 		SlackerChecker_LastRaidInstance["time"] = localtime
 		SlackerChecker_LastRaidInstance["iid"] = instanceID
-		return instanceID
+		SlackerChecker_LastRaidInstance["name"] = name
+		return instanceID, name
 	else
 		if SlackerChecker_LastRaidInstance and (localtime-SlackerChecker_LastRaidInstance["time"]<1800) -- entered an instance in the last 30 mins
 		then
-			return SlackerChecker_LastRaidInstance["iid"]
+			return SlackerChecker_LastRaidInstance["iid"], SlackerChecker_LastRaidInstance["name"]
 		else
 			SlackerChecker_LastRaidInstance = nil
 		end
 	end
-	return nil
+	return nil, nil
 end
 
-local function GetRaidReset(iid)
+local function GetRaidReset(iname)
 	local localtime = time()
 	local numInstances = GetNumSavedInstances()
 	for raidIndex=1,numInstances,1
 	do
 		name, id, reset = GetSavedInstanceInfo(raidIndex)
-		if id == iid
+		if iname == name
 		then
 			return localtime+reset
 		end
@@ -114,7 +117,7 @@ local function IID2Str(iid)
 end
 
 local function DoRecording(reason)
-	local raidId = LastRaidInfo()
+	local raidId, raidName = LastRaidInfo()
 	if not raidId
 	then
 		return false
@@ -126,7 +129,7 @@ local function DoRecording(reason)
 	local players = {}
 	for raidIndex=1,MAX_RAID_MEMBERS,1
 	do  
-		local player, _, subgroup, _, _, _, _, online = GetRaidRosterInfo(raidIndex);
+		local player, _, subgroup, _, class, _, _, online = GetRaidRosterInfo(raidIndex);
 		if player 
 		then
 			local playerEntry = {}
@@ -153,10 +156,11 @@ local function DoRecording(reason)
 			playerEntry["g"] = subgroup
 			playerEntry["o"] = o
 			playerEntry["b"] = buffs
+			playerEntry["c"] = class
 			table.insert(players, playerEntry)
 		end
 	end
-	local reset = GetRaidReset(raidId) 
+	local reset = GetRaidReset(raidName) 
 	local insert = {}
 	insert["d"] = localtime
 	insert["r"] = reason
@@ -184,6 +188,7 @@ local function DoRecording(reason)
     end
 	local entry = {}
 	entry["iid"] = raidId
+	entry["iname"] = raidName
 	entry["date"] = localtime
 	entry["reset"] = reset
 	entry["owner"] = playerName

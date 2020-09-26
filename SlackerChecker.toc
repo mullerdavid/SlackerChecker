@@ -1,7 +1,7 @@
 ## Interface:11304
 ## Title: SlackerChecker
 ## Author: Deathbaron
-## Version: 0.1
+## Version: 0.2
 ## Notes: TODO: add notes.
 ## SavedVariables: SlackerChecker_DB
 
