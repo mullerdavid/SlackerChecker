@@ -169,7 +169,7 @@ local function DoRecording(reason)
 	then
 		SlackerChecker_DB = {}
 	end
-	for i=1,#SlackerChecker_DB,1
+	for i=#SlackerChecker_DB,1,-1
 	do
 		local tmpDate = SlackerChecker_DB[i]["date"]
 		local tmpReset = SlackerChecker_DB[i]["reset"]
