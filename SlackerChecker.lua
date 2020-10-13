@@ -54,6 +54,33 @@ SlackerChecker_DB = {
 
 --[[ Code ]]--
 
+local InstanceMapIDLookup = {
+	[0]="Eastern Kingdoms",
+	[1]="Kalimdor",
+	[389]="Ragefire Chasm",
+	[309]="Zul'Gurub ",
+	[509]="Ruins of Ahn'Qiraj",
+	[249]="Onyxia's Lair",
+	[409]="Molten Core",
+	[469]="Blackwing Lair",
+	[531]="Ahn'Qiraj",
+	[533]="Naxxramas"
+}
+
+local ClassToColorLookup = {
+	-- TODO: other locals as well
+	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50,	["a"] = 1.0 },
+	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04,	["a"] = 1.0 },
+	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45,	["a"] = 1.0 },
+	["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94,	["a"] = 1.0 },
+	["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
+	["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00,	["a"] = 1.0 },
+	["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41,	["a"] = 1.0 },
+	["Shaman"]  = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
+	["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79,	["a"] = 1.0 },
+	["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43,	["a"] = 1.0 },
+}
+
 local frame = CreateFrame("Frame")
 --frame:RegisterEvent("VARIABLES_LOADED")
 frame:RegisterEvent("ADDON_LOADED")
@@ -94,18 +121,6 @@ local function GetRaidReset(iname)
 	return 0
 end
 
-local InstanceMapIDLookup = {
-	[0]="Eastern Kingdoms",
-	[1]="Kalimdor",
-	[389]="Ragefire Chasm",
-	[309]="Zul'Gurub ",
-	[509]="Ruins of Ahn'Qiraj",
-	[249]="Onyxia's Lair",
-	[409]="Molten Core",
-	[469]="Blackwing Lair",
-	[531]="Ahn'Qiraj",
-	[533]="Naxxramas"
-}
 local function IID2Str(iid)
 	if InstanceMapIDLookup[iid] ~= nil
 	then
@@ -113,20 +128,6 @@ local function IID2Str(iid)
 	end
 	return "Unknown"
 end
-
-local ClassToColorLookup = {
-	-- TODO: other locals as well
-	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50,	["a"] = 1.0 },
-	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04,	["a"] = 1.0 },
-	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45,	["a"] = 1.0 },
-	["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94,	["a"] = 1.0 },
-	["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
-	["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00,	["a"] = 1.0 },
-	["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41,	["a"] = 1.0 },
-	["Shaman"]  = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
-	["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79,	["a"] = 1.0 },
-	["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43,	["a"] = 1.0 },
-}
 
 local function ClassToColor(classStr)
 	if ClassToColorLookup[classStr] ~= nil
@@ -443,19 +444,35 @@ local function InitTable()
 				if fShow
 				then
 					local buffs = st:GetCell(realrow,column)["value"]
-					local lot = (#buffs > 20)
+					local sortedbuffs = {}
+					for j=1,#buffs,1 do table.insert(sortedbuffs, buffs[j]) end
+					table.sort(
+						sortedbuffs, 
+						function (first, second)
+							first = first["id"]
+							second = second["id"]
+							firstprio = SlackerChecker_BuffPriorityLookup[tostring(first)] or 0
+							secondprio = SlackerChecker_BuffPriorityLookup[tostring(second)] or 0
+							if (firstprio ~= secondprio)
+							then
+								return firstprio > secondprio
+							end
+							return first < second
+						end
+					)
+					local lot = (#sortedbuffs > 20)
 					local x = 0
-					for j=1,#buffs,1
+					for j=1,#sortedbuffs,1
 					do
-						local spellid = buffs[j]["id"]
-						local expire = buffs[j]["e"]
+						local spellid = sortedbuffs[j]["id"]
+						local expire = sortedbuffs[j]["e"]
 						local name, _, icon = GetSpellInfo(spellid)
 						local description = GetSpellDescription(spellid)
 						local b = CreateFrame("Frame",nil,cellFrame)
 						local width = 16
 						if lot
 						then
-							width = 336/#buffs-1
+							width = 336/#sortedbuffs-1
 						end
 						b:SetWidth(width)
 						b:SetHeight(width)
@@ -464,6 +481,10 @@ local function InitTable()
 						t:SetAllPoints(b)
 						b.texture = t
 						b:SetPoint("TOPLEFT", x, -1*(18-width)/2 );
+						if SlackerChecker_Debug
+						then
+							name = string.format("%s (%d)", name, spellid)
+						end
 						b.tooltip = { ["name"]=name, ["description"]=description }
 						b:HookScript("OnEnter", function(self) ShowTooltipSpell(self, self.tooltip.name, self.tooltip.description, 0) end)
 						b:HookScript("OnLeave", HideTooltip)

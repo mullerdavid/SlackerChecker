@@ -1,7 +1,7 @@
 ## Interface:11304
 ## Title: SlackerChecker
 ## Author: Deathbaron
-## Version: 0.5
+## Version: 0.6
 ## Notes: TODO: add notes.
 ## OptionalDeps: DBM-Core
 ## SavedVariables: SlackerChecker_DB
@@ -9,5 +9,6 @@
 Libs\LibStub\LibStub.lua
 Libs\lib-st\lib-st.xml
 
+SlackerCheckerBuffPrio.lua
 SlackerChecker.lua
 SlackerChecker.xml
