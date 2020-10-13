@@ -36,7 +36,7 @@ SlackerChecker_DB = {
 						["b"] = { -- active buffs
 							{
 								["id"] =  int, -- spell id
-								["e"] = int -- expiration in seconds
+								["e"] = int -- expiration in seconds DEPRECATED
 							}, 
 							...
 						},
@@ -94,26 +94,46 @@ local function GetRaidReset(iname)
 	return 0
 end
 
+local InstanceMapIDLookup = {
+	[0]="Eastern Kingdoms",
+	[1]="Kalimdor",
+	[389]="Ragefire Chasm",
+	[309]="Zul'Gurub ",
+	[509]="Ruins of Ahn'Qiraj",
+	[249]="Onyxia's Lair",
+	[409]="Molten Core",
+	[469]="Blackwing Lair",
+	[531]="Ahn'Qiraj",
+	[533]="Naxxramas"
+}
 local function IID2Str(iid)
-	local InstanceMapID = {
-		[0]="Eastern Kingdoms",
-        [1]="Kalimdor",
-        [389]="Ragefire Chasm",
-        [309]="Zul'Gurub ",
-        [509]="Ruins of Ahn'Qiraj",
-        [249]="Onyxia's Lair",
-        [409]="Molten Core",
-        [469]="Blackwing Lair",
-        [531]="Ahn'Qiraj",
-        [533]="Naxxramas"
-    }
-	for k, v in pairs(InstanceMapID) do
-		if iid == k 
-		then 
-			return v 
-		end
+	if InstanceMapIDLookup[iid] ~= nil
+	then
+		return InstanceMapIDLookup[iid]
 	end
 	return "Unknown"
+end
+
+local ClassToColorLookup = {
+	-- TODO: other locals as well
+	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50,	["a"] = 1.0 },
+	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04,	["a"] = 1.0 },
+	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45,	["a"] = 1.0 },
+	["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94,	["a"] = 1.0 },
+	["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
+	["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00,	["a"] = 1.0 },
+	["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41,	["a"] = 1.0 },
+	["Shaman"]  = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
+	["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79,	["a"] = 1.0 },
+	["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43,	["a"] = 1.0 },
+}
+
+local function ClassToColor(classStr)
+	if ClassToColorLookup[classStr] ~= nil
+	then
+		return ClassToColorLookup[classStr]
+	end
+	return { ["r"] = 0.5, ["g"] = 0.5, ["b"] = 0.5,	["a"] = 1.0 }
 end
 
 local function DoRecording(reason)
@@ -145,7 +165,7 @@ local function DoRecording(reason)
 				end
 				local buff = {}
 				buff["id"] = spellId
-				buff["e"] = expire
+				-- buff["e"] = expire
 				table.insert(buffs, buff)
 				name, _, _, _, duration, expirationTime, _, _, _, spellId = UnitBuff(target, i);
 			end;
@@ -204,6 +224,7 @@ local function ResetDB()
 end
 
 local function ProcessCommand(cmd)
+	cmd = cmd:lower()
 	if cmd == "show"
 	then
 		SlackerChecker_Frame:Show() 
@@ -276,6 +297,8 @@ frame:SetScript("OnEvent", OnEvent)
 
 --[[ UI ]]--
 
+local ScrollingTablePlayers = nil
+
 local RefreshUI = nil
 local SelectInstance = nil
 
@@ -319,12 +342,7 @@ local function ClearData()
 end
 
 local function ClearPlayer()
-	local children = { SlackerChecker_Frame_PlayerList_ScrollChild:GetChildren() }
-	for i, child in ipairs(children) do
-		child:Hide()
-		child:SetParent(nil)
-		child:ClearAllPoints()
-	end
+	ScrollingTablePlayers:Hide();
 end
 
 local function DeleteInstance(index)
@@ -350,48 +368,114 @@ local function SelectData(index, index2)
 	end
 	local set = SlackerChecker_DB[index]["data"][index2]["p"]
 	local num = #set
-	local y = 0
+	
+	local data = {}
 	for i=1,num,1
 	do
-		local f = CreateFrame("Frame", nil, SlackerChecker_Frame_PlayerList_ScrollChild, "SlackerChecker_PlayerEntry")
-		f:SetPoint("TOPLEFT", 0, y );
-		local offlinesuff = ""
-		if set[i]["o"] == 0 then offlinesuff=" (off)" end
-		f.Player:SetText(string.format("%s (grp %d)%s",set[i]["n"], set[i]["g"], offlinesuff) )
-		local buffs = set[i]["b"]
-		local xx = 170
-		local yy = 0
-		for j=1,#buffs,1
-		do
-			local spellid = buffs[j]["id"]
-			local expire = buffs[j]["e"]
-			if (j==21) -- new row for buffs
-			then
-				f:SetHeight(33)
-				y = y-17
-				xx = 170
-				yy = -17
-			end	
-			local name, _, icon = GetSpellInfo(spellid)
-			local description = GetSpellDescription(spellid)
-			local b = CreateFrame("Frame",nil,f)
-			b:SetWidth(16)
-			b:SetHeight(16)
-			local t = b:CreateTexture(nil,"BACKGROUND")
-			t:SetTexture(icon)
-			t:SetAllPoints(b)
-			b.texture = t
-			b:SetPoint("TOPLEFT", xx, yy );
-			b.tooltip = { ["name"]=name, ["description"]=description, ["expire"]=expire}
-			b:HookScript("OnEnter", function(self) ShowTooltipSpell(self, self.tooltip.name, self.tooltip.description, self.tooltip.expire) end)
-			b:HookScript("OnLeave", HideTooltip)
-			b:EnableMouse(true)
-			b:Show()
-			xx = xx + 17
+		local offlinetext = ""
+		local color = ClassToColor(set[i]["c"])
+		if set[i]["o"] == 0 
+		then 
+			offlinetext=" (off)" 
+			color = ClassToColor("Offline")
 		end
-		y = y-18
+		
+		local name = {
+			["value"] = string.format("%s%s",set[i]["n"], offlinetext),
+			["color"] = color
+		}
+		local class = {
+			["value"] = set[i]["c"],
+			["color"] = color
+		}
+		local group = {
+			["value"] = set[i]["g"]
+		}
+		local buffs = {
+			["value"] = set[i]["b"]
+		}
+		local row = { ["cols"] = {name, class, group, buffs} }
+		table.insert(data, row)
 	end
-	
+	ScrollingTablePlayers:SetData(data);
+	ScrollingTablePlayers:Refresh();
+	ScrollingTablePlayers:Show();
+end
+
+local function InitTable()
+	if ScrollingTablePlayers ~= nil
+	then
+		return
+	end
+	local ScrollingTable = LibStub("ScrollingTable");
+	local cols = { 
+		{
+			["name"] = "Name",
+			["width"] = 84,
+			["align"] = "LEFT",
+			["sort"] = "dsc",
+			["defaultsort"] = "asc",
+		}, 
+		{
+			["name"] = "Class",
+			["width"] = 60,
+			["align"] = "LEFT",
+			["defaultsort"] = "asc",
+		}, 
+		{
+			["name"] = "Gr",
+			["width"] = 20,
+			["align"] = "LEFT",
+			["defaultsort"] = "asc",
+		}, 
+		{
+			["name"] = "Buffs",
+			["width"] = 336,
+			["align"] = "LEFT",
+			["comparesort"] = function (self, rowa, rowb, sortbycol) return rowa<rowb; end,
+			["DoCellUpdate"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, st, ...)
+				local children = { cellFrame:GetChildren() }
+				for i, child in ipairs(children) do
+					child:Hide()
+					child:SetParent(nil)
+					child:ClearAllPoints()
+				end
+				if fShow
+				then
+					local buffs = st:GetCell(realrow,column)["value"]
+					local lot = (#buffs > 20)
+					local x = 0
+					for j=1,#buffs,1
+					do
+						local spellid = buffs[j]["id"]
+						local expire = buffs[j]["e"]
+						local name, _, icon = GetSpellInfo(spellid)
+						local description = GetSpellDescription(spellid)
+						local b = CreateFrame("Frame",nil,cellFrame)
+						local width = 16
+						if lot
+						then
+							width = 336/#buffs-1
+						end
+						b:SetWidth(width)
+						b:SetHeight(width)
+						local t = b:CreateTexture(nil,"BACKGROUND")
+						t:SetTexture(icon)
+						t:SetAllPoints(b)
+						b.texture = t
+						b:SetPoint("TOPLEFT", x, -1*(18-width)/2 );
+						b.tooltip = { ["name"]=name, ["description"]=description }
+						b:HookScript("OnEnter", function(self) ShowTooltipSpell(self, self.tooltip.name, self.tooltip.description, 0) end)
+						b:HookScript("OnLeave", HideTooltip)
+						b:EnableMouse(true)
+						b:Show()
+						x = x + width+1
+					end
+				end
+			end
+		}, 
+	}
+	ScrollingTablePlayers = ScrollingTable:CreateST(cols, 32, 18, nil, SlackerChecker_Frame_PlayerList)
 end
 
 SelectInstance = function(index)
@@ -434,11 +518,12 @@ RefreshUI = function()
 	do
 		local index = num+1-i
 		local f = CreateFrame("Frame", nil, SlackerChecker_Frame_InstanceList_ScrollChild, "SlackerChecker_MenuEntry")
+		local name = SlackerChecker_DB[index]["owner"] or "Old version"
 		f.index = index
 		f:SetPoint("TOPLEFT", 0, -34*(i-1) );
 		f:HookScript("OnMouseDown", function(self) SelectInstance(self.index) end)
 		f.DateTime:SetText(date(SlackerChecker_DateFormat, SlackerChecker_DB[index]["date"])) 
-		f.Instance:SetText(IID2Str(SlackerChecker_DB[index]["iid"]))
+		f.Instance:SetText( string.format("%s (%s)", IID2Str(SlackerChecker_DB[index]["iid"]), name) )
 		f.DeleteButton:HookScript("OnClick", function(self) DeleteInstance(self:GetParent().index) end)
 	end
 end
@@ -461,7 +546,6 @@ function SlackerChecker_Frame_Reset()
 end
 
 function SlackerChecker_Frame_OnShow()
+	InitTable()
 	RefreshUI()
-
-
 end
