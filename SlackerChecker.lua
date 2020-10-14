@@ -309,15 +309,31 @@ local function ShowTooltip(parent, text)
 	GameTooltip:Show()
 end
 
-local function ShowTooltipSpell(parent, name, description, expire)
-	GameTooltip:SetOwner(parent, "ANCHOR_TOPRIGHT");
-	local text = string.format("%s", name, description)
-	if (expire>0) 
+local function ShowTooltipSpell(parent, name, description, spellid)
+	local gtt = GameTooltip
+	gtt:SetOwner(parent, "ANCHOR_TOPRIGHT");
+	gtt:ClearLines()
+	gtt:AddLine(name, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, false)
+	gtt:AddLine(description, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b, 1, true)
+	if SlackerChecker_Debug
 	then
-		text =  text .. string.format("\n%ds", expire)
+		gtt:AddLine(spellid, HIGHLIGHT_FONT_COLOR.r, HIGHLIGHT_FONT_COLOR.g, HIGHLIGHT_FONT_COLOR.b, 1, true)
 	end
-	GameTooltip:SetText( text, 1, 1, 1, 1, true )
-	GameTooltip:Show()
+	for i=1,gtt:NumLines() do
+        local lineL = _G["GameTooltipTextLeft"..tostring(i)]
+        local lineR = _G["GameTooltipTextRight"..tostring(i)]
+        local fontNameL, fontSizeL = lineL:GetFont()
+        if fontNameL == nil or fontSizeL == 0 then
+            lineL:SetFont("Fonts\\FRIZQT__.TTF", i==1 and 14 or 12)
+            lineL:SetJustifyH("LEFT")
+        end
+        local fontNameR, fontSizeR = lineR:GetFont()
+        if fontNameR == nil or fontSizeR == 0 then
+            lineR:SetFont("Fonts\\FRIZQT__.TTF", i==1 and 14 or 12)
+            lineR:SetJustifyH("RIGHT")
+        end
+    end 
+	gtt:Show()
 end
 
 local function HideTooltip()
@@ -403,6 +419,58 @@ local function SelectData(index, index2)
 	ScrollingTablePlayers:Show();
 end
 
+function CompareBuffs(first, second)
+	first = first["id"]
+	second = second["id"]
+	firstprio = SlackerChecker_BuffPriorityLookup[tostring(first)] or 0
+	secondprio = SlackerChecker_BuffPriorityLookup[tostring(second)] or 0
+	if (firstprio ~= secondprio)
+	then
+		return firstprio > secondprio
+	end
+	return first < second
+end
+
+local function DoCellUpdateBuff(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, st, ...)
+	local children = { cellFrame:GetChildren() }
+	for i, child in ipairs(children) do
+		child:Hide()
+		child:SetParent(nil)
+		child:ClearAllPoints()
+	end
+	if fShow
+	then
+		local buffs = st:GetCell(realrow,column)["value"]
+		local sortedbuffs = {}
+		for j=1,#buffs,1 do table.insert(sortedbuffs, buffs[j]) end
+		table.sort( sortedbuffs, CompareBuffs )
+		local x = 0
+		local colwidth = cellFrame:GetWidth()
+		local width = colwidth/#sortedbuffs-1
+		width = math.min(16, width)
+		for j=1,#sortedbuffs,1
+		do
+			local spellid = sortedbuffs[j]["id"]
+			local name, _, icon = GetSpellInfo(spellid)
+			local description = GetSpellDescription(spellid)
+			local b = CreateFrame("Frame",nil,cellFrame)
+			b:SetWidth(width)
+			b:SetHeight(width)
+			local t = b:CreateTexture(nil,"BACKGROUND")
+			t:SetTexture(icon)
+			t:SetAllPoints(b)
+			b.texture = t
+			b:SetPoint("TOPLEFT", x, -1*(18-width)/2 );
+			b.tooltip = { ["id"]=spellid, ["name"]=name, ["description"]=description }
+			b:HookScript("OnEnter", function(self) ShowTooltipSpell(self, self.tooltip.name, self.tooltip.description, self.tooltip.id) end)
+			b:HookScript("OnLeave", HideTooltip)
+			b:EnableMouse(true)
+			b:Show()
+			x = x + width+1
+		end
+	end
+end
+
 local function InitTable()
 	if ScrollingTablePlayers ~= nil
 	then
@@ -434,66 +502,7 @@ local function InitTable()
 			["width"] = 336,
 			["align"] = "LEFT",
 			["comparesort"] = function (self, rowa, rowb, sortbycol) return rowa<rowb; end,
-			["DoCellUpdate"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, st, ...)
-				local children = { cellFrame:GetChildren() }
-				for i, child in ipairs(children) do
-					child:Hide()
-					child:SetParent(nil)
-					child:ClearAllPoints()
-				end
-				if fShow
-				then
-					local buffs = st:GetCell(realrow,column)["value"]
-					local sortedbuffs = {}
-					for j=1,#buffs,1 do table.insert(sortedbuffs, buffs[j]) end
-					table.sort(
-						sortedbuffs, 
-						function (first, second)
-							first = first["id"]
-							second = second["id"]
-							firstprio = SlackerChecker_BuffPriorityLookup[tostring(first)] or 0
-							secondprio = SlackerChecker_BuffPriorityLookup[tostring(second)] or 0
-							if (firstprio ~= secondprio)
-							then
-								return firstprio > secondprio
-							end
-							return first < second
-						end
-					)
-					local lot = (#sortedbuffs > 20)
-					local x = 0
-					for j=1,#sortedbuffs,1
-					do
-						local spellid = sortedbuffs[j]["id"]
-						local expire = sortedbuffs[j]["e"]
-						local name, _, icon = GetSpellInfo(spellid)
-						local description = GetSpellDescription(spellid)
-						local b = CreateFrame("Frame",nil,cellFrame)
-						local width = 16
-						if lot
-						then
-							width = 336/#sortedbuffs-1
-						end
-						b:SetWidth(width)
-						b:SetHeight(width)
-						local t = b:CreateTexture(nil,"BACKGROUND")
-						t:SetTexture(icon)
-						t:SetAllPoints(b)
-						b.texture = t
-						b:SetPoint("TOPLEFT", x, -1*(18-width)/2 );
-						if SlackerChecker_Debug
-						then
-							name = string.format("%s (%d)", name, spellid)
-						end
-						b.tooltip = { ["name"]=name, ["description"]=description }
-						b:HookScript("OnEnter", function(self) ShowTooltipSpell(self, self.tooltip.name, self.tooltip.description, 0) end)
-						b:HookScript("OnLeave", HideTooltip)
-						b:EnableMouse(true)
-						b:Show()
-						x = x + width+1
-					end
-				end
-			end
+			["DoCellUpdate"] = DoCellUpdateBuff
 		}, 
 	}
 	ScrollingTablePlayers = ScrollingTable:CreateST(cols, 32, 18, nil, SlackerChecker_Frame_PlayerList)
