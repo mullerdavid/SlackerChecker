@@ -102,6 +102,34 @@
 					<OnClick function="SlackerChecker_Frame_Reset"/>
 				</Scripts>
 			</Button>
+			<Button name="$parent_ButtonExport" inherits="UIPanelButtonGrayTemplate" text="Export">
+				<Anchors>
+					<Anchor point="TOPLeft">
+						<Offset x="180" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="64" y="16" />
+				</Size>
+				<Scripts>
+					<OnClick>print("NotImplemented");</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_ButtonReport" inherits="UIPanelButtonTemplate" text="Report">
+				<Anchors>
+					<Anchor point="TOPLeft">
+						<Offset x="264" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="64" y="16" />
+				</Size>
+				<Scripts>
+					<OnClick>SlackerChecker_Frame_ReportContext(self);</OnClick>
+				</Scripts>
+			</Button>
+			<Frame name="$parent_ContextMenu" inherits="UIDropDownMenuTemplate">
+			</Frame>
 			<ScrollFrame name="$parent_InstanceList" inherits="UIPanelScrollFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="16" y="-32"/>
@@ -131,6 +159,82 @@
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="490" y="-32"/>
 					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="490" y="16"/>
 					<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parent" x="-36"/>
+				</Anchors>
+			</Frame>
+		</Frames>
+	</Frame>
+	<Frame name="SlackerChecker_Report" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true">
+		<Scripts>
+			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
+			<OnDragStart>self:StartMoving();</OnDragStart>
+			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
+        </Scripts>
+		<Size>
+			<AbsDimension x="1024" y="640" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" />
+		</Anchors>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parent_Title" text="Title" inherits="GameFontHighlight"  >
+					<Anchors>
+						<Anchor point="TOP" x="0" y="-12" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		<Frames>
+			<Button name="$parent_ButtonClose" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset x="-4" y="-4"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnClick> self:GetParent():Hide(); </OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_Button1" inherits="UIPanelButtonTemplate" text="Button1">
+				<Anchors>
+					<Anchor point="TOPLeft">
+						<Offset x="12" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="64" y="16" />
+				</Size>
+				<Scripts>
+				</Scripts>
+			</Button>
+			<Button name="$parent_Button2" inherits="UIPanelButtonTemplate" text="Button2">
+				<Anchors>
+					<Anchor point="TOPLeft">
+						<Offset x="96" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="64" y="16" />
+				</Size>
+				<Scripts>
+				</Scripts>
+			</Button>
+			<Frame name="$parent_Table">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="16" y="-38"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="16" y="8"/>
+					<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parent" x="-16"/>
 				</Anchors>
 			</Frame>
 		</Frames>

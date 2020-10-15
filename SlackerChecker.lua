@@ -54,6 +54,8 @@ SlackerChecker_DB = {
 
 --[[ Code ]]--
 
+local GenerateReport = nil
+
 local InstanceMapIDLookup = {
 	[0]="Eastern Kingdoms",
 	[1]="Kalimdor",
@@ -69,16 +71,16 @@ local InstanceMapIDLookup = {
 
 local ClassToColorLookup = {
 	-- TODO: other locals as well
-	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50,	["a"] = 1.0 },
-	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04,	["a"] = 1.0 },
-	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45,	["a"] = 1.0 },
-	["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94,	["a"] = 1.0 },
-	["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
-	["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00,	["a"] = 1.0 },
-	["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41,	["a"] = 1.0 },
-	["Shaman"]  = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73,	["a"] = 1.0 },
-	["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79,	["a"] = 1.0 },
-	["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43,	["a"] = 1.0 },
+	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50, ["a"] = 1.0 },
+	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04, ["a"] = 1.0 },
+	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45, ["a"] = 1.0 },
+	["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94, ["a"] = 1.0 },
+	["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73, ["a"] = 1.0 },
+	["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00, ["a"] = 1.0 },
+	["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41, ["a"] = 1.0 },
+	["Shaman"]  = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73, ["a"] = 1.0 },
+	["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79, ["a"] = 1.0 },
+	["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43, ["a"] = 1.0 },
 }
 
 local frame = CreateFrame("Frame")
@@ -141,7 +143,7 @@ local function DoRecording(reason)
 	local raidId, raidName = LastRaidInfo()
 	if not raidId
 	then
-		return false
+		return nil
 	end
 	print("Recording buffs: " .. reason .. ".") 
 	local localtime = time()
@@ -204,7 +206,7 @@ local function DoRecording(reason)
 		then
 			table.insert(SlackerChecker_DB[i]["data"], insert)
 			SlackerChecker_DB[i]["reset"] = math.max(reset, tmpReset)
-			return true
+			return insert
 		end
     end
 	local entry = {}
@@ -217,18 +219,32 @@ local function DoRecording(reason)
 	entry["data"] = {}
 	table.insert(entry["data"], insert)
 	table.insert(SlackerChecker_DB, entry)
-	return true
+	return insert
 end
 
 local function ResetDB()
 	SlackerChecker_DB = nil
 end
 
-local function ProcessCommand(cmd)
+local function ProcessCommand(msg)
+	local _, _, cmd, args = string.find(msg, "%s?(%w+)%s?(.*)")
 	cmd = cmd:lower()
 	if cmd == "show"
 	then
 		SlackerChecker_Frame:Show() 
+	elseif cmd == "report" 
+	then
+		local t = string.upper(strsub(args,1,4))
+		if t=="SNAP"
+		then
+			local snapshot = DoRecording("Report "..args)
+			if snapshot
+			then
+				GenerateReport(args, snapshot)
+			end
+		else
+			print("Only snapshot reports are supported")
+		end
 	elseif cmd == "manual" 
 	then
 		if not DoRecording("Manual recording")
@@ -244,7 +260,7 @@ local function ProcessCommand(cmd)
 		SlackerChecker_Debug = true
 		print("Debug enabled")
 	else
-		print("Syntax: " .. SLASH_SlackerChecker1 .. " ( show | manual | reset )");
+		print("Syntax: " .. SLASH_SlackerChecker1 .. " ( show | manual | report snap-reportname | reset )");
 	end
 end
 
@@ -299,9 +315,13 @@ frame:SetScript("OnEvent", OnEvent)
 --[[ UI ]]--
 
 local ScrollingTablePlayers = nil
+local LastIndex1 = nil
+local LastIndex2 = nil
 
 local RefreshUI = nil
 local SelectInstance = nil
+
+SlackerChecker_Frame_ReportContext = nil
 
 local function ShowTooltip(parent, text)
 	GameTooltip:SetOwner(parent, "ANCHOR_TOPRIGHT");
@@ -341,6 +361,7 @@ local function HideTooltip()
 end
 
 local function ClearInstance()
+	LastIndex1 = nil
 	local children = { SlackerChecker_Frame_InstanceList_ScrollChild:GetChildren() }
 	for i, child in ipairs(children) do
 		child:Hide()
@@ -350,6 +371,7 @@ local function ClearInstance()
 end
 
 local function ClearData()
+	LastIndex2 = nil
 	local children = { SlackerChecker_Frame_DataList_ScrollChild:GetChildren() }
 	for i, child in ipairs(children) do
 		child:Hide()
@@ -374,6 +396,8 @@ end
 
 local function SelectData(index, index2)
 	ClearPlayer()
+	LastIndex1 = index
+	LastIndex2 = index2
 	local children = { SlackerChecker_Frame_DataList_ScrollChild:GetChildren() }
 	for i, child in ipairs(children) do
 		if (#children+1-i) == index2
@@ -384,10 +408,8 @@ local function SelectData(index, index2)
 		end
 	end
 	local set = SlackerChecker_DB[index]["data"][index2]["p"]
-	local num = #set
-	
 	local data = {}
-	for i=1,num,1
+	for i=1,#set,1
 	do
 		local offlinetext = ""
 		local color = ClassToColor(set[i]["c"])
@@ -419,7 +441,7 @@ local function SelectData(index, index2)
 	ScrollingTablePlayers:Show();
 end
 
-function CompareBuffs(first, second)
+local function CompareBuffs(first, second)
 	first = first["id"]
 	second = second["id"]
 	firstprio = SlackerChecker_BuffPriorityLookup[tostring(first)] or 0
@@ -471,6 +493,10 @@ local function DoCellUpdateBuff(rowFrame, cellFrame, data, cols, row, realrow, c
 	end
 end
 
+local function NoSort(self, rowa, rowb, sortbycol) 
+	return rowa<rowb;
+end
+
 local function InitTable()
 	if ScrollingTablePlayers ~= nil
 	then
@@ -501,7 +527,7 @@ local function InitTable()
 			["name"] = "Buffs",
 			["width"] = 336,
 			["align"] = "LEFT",
-			["comparesort"] = function (self, rowa, rowb, sortbycol) return rowa<rowb; end,
+			["comparesort"] = NoSort,
 			["DoCellUpdate"] = DoCellUpdateBuff
 		}, 
 	}
@@ -511,6 +537,7 @@ end
 SelectInstance = function(index)
 	ClearData()
 	ClearPlayer()
+	LastIndex1 = index
 	local children = { SlackerChecker_Frame_InstanceList_ScrollChild:GetChildren() }
 	for i, child in ipairs(children) do
 		if (#children+1-i) == index
@@ -529,7 +556,7 @@ SelectInstance = function(index)
 		f.index = index
 		f.index2 = index2
 		f:SetPoint("TOPLEFT", 0, -34*(i-1) );
-		f:HookScript("OnMouseDown", function(self) SelectData(self.index, self.index2) end)
+		f:HookScript("OnMouseDown", function(self, button) if button=="RightButton" then SlackerChecker_Frame_ReportContext("cursor",self.index, self.index2) else SelectData(self.index, self.index2) end end)
 		f.DateTime:SetText(date(SlackerChecker_DateFormat, set[index2]["d"])) 
 		f.Instance:SetText(set[index2]["r"])
 		f.DeleteButton:HookScript("OnClick", function(self) DeleteData(self:GetParent().index, self:GetParent().index2) end)
@@ -551,7 +578,7 @@ RefreshUI = function()
 		local name = SlackerChecker_DB[index]["owner"] or "Old version"
 		f.index = index
 		f:SetPoint("TOPLEFT", 0, -34*(i-1) );
-		f:HookScript("OnMouseDown", function(self) SelectInstance(self.index) end)
+		f:HookScript("OnMouseDown", function(self, button) if button=="RightButton" then SlackerChecker_Frame_ReportContext("cursor",self.index) else SelectInstance(self.index) end end)
 		f.DateTime:SetText(date(SlackerChecker_DateFormat, SlackerChecker_DB[index]["date"])) 
 		f.Instance:SetText( string.format("%s (%s)", IID2Str(SlackerChecker_DB[index]["iid"]), name) )
 		f.DeleteButton:HookScript("OnClick", function(self) DeleteInstance(self:GetParent().index) end)
@@ -578,4 +605,393 @@ end
 function SlackerChecker_Frame_OnShow()
 	InitTable()
 	RefreshUI()
+end
+
+local function ShowReport(title, cols, data, btn1, btn2)
+	SlackerChecker_Report:Hide()
+	local children = { SlackerChecker_Report_Table:GetChildren() }
+	for i, child in ipairs(children) do
+		child:Hide()
+		child:SetParent(nil)
+		child:ClearAllPoints()
+	end
+	SlackerChecker_Report_Button1:Hide()
+	SlackerChecker_Report_Button2:Hide()
+	SlackerChecker_Report_Title:SetText(title)
+	local ScrollingTable = LibStub("ScrollingTable");
+	local tbl = ScrollingTable:CreateST(cols, 30, 18, nil, SlackerChecker_Report_Table)
+	tbl:SetData(data);
+	tbl:Refresh();
+	tbl:Show();
+	local width = math.max(tbl.frame:GetWidth()+40, 200)
+	if btn1 ~= nil
+	then
+		SlackerChecker_Report_Button1:SetText(btn1.text)
+		SlackerChecker_Report_Button1:SetScript("OnClick", btn1.callback)
+		SlackerChecker_Report_Button1:Show()
+	end
+	if btn2 ~= nil
+	then
+		SlackerChecker_Report_Button2:SetText(btn1.text)
+		SlackerChecker_Report_Button2:SetScript("OnClick", btn1.callback)
+		SlackerChecker_Report_Button2:Show()
+	end
+	SlackerChecker_Report:SetWidth(width)
+	SlackerChecker_Report:Show()
+	
+end
+
+SlackerChecker_Frame_ReportContext = function(parent, index, index2)
+	local isButton = (index==nil and index2==nil)
+	local dropDown = SlackerChecker_Frame_ContextMenu
+	local options = { 
+		{["id"] = "raid-missing-buffs", ["name"] = "Missing Buffs on Pull"},
+		{["id"] = "snap-worldbuffs", ["name"] = "Worldbuffs"},
+		{["id"] = "snap-consumes", ["name"] = "Flasks, Consumes, Food"},
+		{["id"] = "snap-missing-buffs", ["name"] = "Missing Buffs"}
+	}
+	local shown = {}
+	for i=1,#options,1
+	do
+		local entry = options[i]
+		entry.index = nil
+		entry.index2 = nil
+		local t = string.upper(strsub(entry.id,1,4))
+		if isButton and LastIndex1 ~=nil and t=="RAID"
+		then
+			entry.name = t.." "..entry.name
+			entry.index = LastIndex1
+			table.insert(shown, entry)
+		elseif isButton and LastIndex1 ~=nil and LastIndex2 ~=nil and t=="SNAP"
+		then
+			entry.name = t.." "..entry.name
+			entry.index = LastIndex1
+			entry.index2 = LastIndex2
+			table.insert(shown, entry)
+		elseif not isButton and index ~= nil and index2 == nil and t=="RAID"
+		then
+			entry.index = index
+			table.insert(shown, entry)
+		elseif not isButton and index ~= nil and index2 ~= nil and t=="SNAP"
+		then
+			entry.index = index
+			entry.index2 = index2
+			table.insert(shown, entry)
+		end
+	end
+	UIDropDownMenu_Initialize(dropDown, 
+	function()
+		for i=1,#shown,1
+		do
+			local entry = shown[i]
+			local info = { 
+				["text"]=entry.name, 
+				["value"]=entry.id,
+				["arg1"]=entry,
+				["notCheckable"]=true,
+				["func"]=
+				function(self, entry) 
+					local data=nil
+					if entry.index ~= nil and entry.index2 ~= nil
+					then 
+						data = SlackerChecker_DB[entry.index]["data"][entry.index2]
+					elseif entry.index ~= nil 
+					then
+						data = SlackerChecker_DB[entry.index]
+					end 
+					GenerateReport(entry.id, data)
+				end
+			}
+			UIDropDownMenu_AddButton(info)
+		end
+		local info = {
+			["text"]="Cancel",
+			["notCheckable"]=true,
+			["func"]=function(self) self:Hide() end
+		}
+		UIDropDownMenu_AddButton(info)
+	end,
+	"MENU")
+	ToggleDropDownMenu(1, nil, dropDown, parent, 0, 0);
+end
+
+function SlackerChecker_IsDMFWeek(timestamp)
+	-- DMF spawns the following monday after first friday of the month at daily reset time and lasts for a week.
+	-- TODO: Regional offsets, reset time offsets, EU Monday 4am UTC reset time
+	local weekday = tonumber(date("%w", timestamp), 10)
+	local dotm = tonumber(date("%d", timestamp), 10)
+	local monday = dotm-weekday+1
+	local friday = monday-3
+	return (1<=friday and friday<7)
+end
+
+local function CalculateAward(buffs, class, timestamp)
+	local dmfup = SlackerChecker_IsDMFWeek(timestamp)
+	local count = 0
+	local dmt = 0
+	for j=1,#buffs,1
+	do
+		local b = buffs[j]["id"]
+		if b==22817 or b==22818 or b==22820 -- DMT buffs
+		then
+			dmt = dmt+1
+		else
+			count = count+1
+		end
+	end
+	if dmt==3
+	then
+		count = count+1
+	end
+	if dmfup and count==6
+	then
+		return 50
+	elseif not dmfup and count==5
+	then
+		return 50
+	elseif 3<=count
+	then
+		return 20
+	end
+	return 0
+end
+
+local function CalculateAward2(buffs, class, timestamp)
+	for j=1,#buffs,1
+	do
+		local b = buffs[j]["id"]
+		if b==17624 or b==17626 or b==17627 or b==17628 or b==17629 -- Flasks
+		then
+			return 40
+		end
+	end
+	return 0
+end
+
+GenerateReport = function(id, data)
+	print(id)
+	if id=="snap-worldbuffs"
+	then
+		local cols = { 
+			{
+				["name"] = "Name",
+				["width"] = 84,
+				["align"] = "LEFT",
+				["sort"] = "dsc",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Class",
+				["width"] = 60,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Gr",
+				["width"] = 20,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Buffs",
+				["width"] = 200,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+		}
+		if CalculateAward ~= nil
+		then
+			table.insert(cols, 4,
+			{
+				["name"] = "Award",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			})
+		end
+		local datatable = {}
+		set=data["p"]
+		for i=1,#set,1
+		do
+			local offlinetext = ""
+			local color = ClassToColor(set[i]["c"])
+			if set[i]["o"] == 0 
+			then 
+				offlinetext=" (off)" 
+				color = ClassToColor("Offline")
+			end
+			local name = {
+				["value"] = string.format("%s%s",set[i]["n"], offlinetext),
+				["color"] = color
+			}
+			local class = {
+				["value"] = set[i]["c"],
+				["color"] = color
+			}
+			local group = {
+				["value"] = set[i]["g"]
+			}
+			local buffsfiltered = {}
+			for j=1,#set[i]["b"],1
+			do
+				local b = set[i]["b"][j]
+				local p = SlackerChecker_BuffPriorityLookup[tostring(b["id"])] or 0
+				if SlackerChecker_BuffPriority.WB4<=p and p<=SlackerChecker_BuffPriority.DMF
+				then
+					table.insert(buffsfiltered, b)
+				end
+			end
+			local buffs = {
+				["value"] = buffsfiltered
+			}
+			local row = { ["cols"] = {name, class, group, buffs} }
+			if CalculateAward ~= nil
+			then
+				local awrd = { ["value"] = CalculateAward(buffsfiltered, set[i]["c"], data["d"]) }
+				table.insert(row["cols"], 4, awrd)
+			end
+			table.insert(datatable, row)
+		end
+		--ShowReport(id, cols, datatable, {text="Hello", callback=function() print("World") end })
+		ShowReport(id, cols, datatable)
+	elseif id=="snap-consumes"
+	then
+		local cols = { 
+			{
+				["name"] = "Name",
+				["width"] = 84,
+				["align"] = "LEFT",
+				["sort"] = "dsc",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Class",
+				["width"] = 60,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Gr",
+				["width"] = 20,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Flask",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Zanza",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Prot",
+				["width"] = 60,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Consumes",
+				["width"] = 120,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Food",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+		}
+		if CalculateAward2 ~= nil
+		then
+			table.insert(cols, 4,
+			{
+				["name"] = "Award",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			})
+		end
+		local datatable = {}
+		set=data["p"]
+		for i=1,#set,1
+		do
+			local offlinetext = ""
+			local color = ClassToColor(set[i]["c"])
+			if set[i]["o"] == 0 
+			then 
+				offlinetext=" (off)" 
+				color = ClassToColor("Offline")
+			end
+			local name = {
+				["value"] = string.format("%s%s",set[i]["n"], offlinetext),
+				["color"] = color
+			}
+			local class = {
+				["value"] = set[i]["c"],
+				["color"] = color
+			}
+			local group = {
+				["value"] = set[i]["g"]
+			}
+			local flask = {}
+			local zanza = {}
+			local prot = {}
+			local cons = {}
+			local food = {}
+			local all = {}
+			for j=1,#set[i]["b"],1
+			do
+				local b = set[i]["b"][j]
+				local p = SlackerChecker_BuffPriorityLookup[tostring(b["id"])] or 0
+				if p==SlackerChecker_BuffPriority.FLASK
+				then
+					table.insert(all, b)
+					table.insert(flask, b)
+				elseif p==SlackerChecker_BuffPriority.ZANZA
+				then
+					table.insert(all, b)
+					table.insert(zanza, b)
+				elseif p==SlackerChecker_BuffPriority.GPROT or p==SlackerChecker_BuffPriority.PROT
+				then
+					table.insert(all, b)
+					table.insert(prot, b)
+				elseif p==SlackerChecker_BuffPriority.CONS
+				then
+					table.insert(all, b)
+					table.insert(cons, b)
+				elseif p==SlackerChecker_BuffPriority.FOOD
+				then
+					table.insert(all, b)
+					table.insert(food, b)
+				end
+			end
+			flask = {["value"] = flask}
+			zanza = {["value"] = zanza}
+			prot = {["value"] = prot}
+			cons = {["value"] = cons}
+			food = {["value"] = food}
+			local row = { ["cols"] = {name, class, group, flask, zanza, prot, cons, food} }
+			if CalculateAward2 ~= nil
+			then
+				local awrd = { ["value"] = CalculateAward2(all, set[i]["c"], data["d"]) }
+				table.insert(row["cols"], 4, awrd)
+			end
+			table.insert(datatable, row)
+		end
+		ShowReport(id, cols, datatable)
+	else
+		print("NotImplemented")
+	end
 end
