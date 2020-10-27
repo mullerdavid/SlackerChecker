@@ -70,7 +70,6 @@ local InstanceMapIDLookup = {
 }
 
 local ClassToColorLookup = {
-	-- TODO: other locals as well
 	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50, ["a"] = 1.0 },
 	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04, ["a"] = 1.0 },
 	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45, ["a"] = 1.0 },
@@ -153,6 +152,8 @@ local function DoRecording(reason)
 	for raidIndex=1,MAX_RAID_MEMBERS,1
 	do  
 		local player, _, subgroup, _, class, _, _, online = GetRaidRosterInfo(raidIndex);
+		--_, class, _ = UnitClass("raid"..raidIndex)
+		--class = class:sub(1,1):upper()..class:sub(2)
 		if player 
 		then
 			local playerEntry = {}
@@ -222,13 +223,23 @@ local function DoRecording(reason)
 	return insert
 end
 
+function SlackerChecker_DoRecording(reason)
+	if not DoRecording(reason)
+	then
+		print("Error: Not in raid instance.")
+	end
+end
+
 local function ResetDB()
 	SlackerChecker_DB = nil
 end
 
 local function ProcessCommand(msg)
 	local _, _, cmd, args = string.find(msg, "%s?(%w+)%s?(.*)")
-	cmd = cmd:lower()
+	if cmd
+	then
+		cmd = cmd:lower()
+	end
 	if cmd == "show"
 	then
 		SlackerChecker_Frame:Show() 
@@ -247,10 +258,7 @@ local function ProcessCommand(msg)
 		end
 	elseif cmd == "manual" 
 	then
-		if not DoRecording("Manual recording")
-		then
-			print("Error: Not in raid instance.")
-		end
+		SlackerChecker_DoRecording("Manual recording")
 	elseif cmd == "reset" 
 	then
 		ResetDB()
@@ -608,37 +616,30 @@ function SlackerChecker_Frame_OnShow()
 end
 
 local function ShowReport(title, cols, data, btn1, btn2)
-	SlackerChecker_Report:Hide()
-	local children = { SlackerChecker_Report_Table:GetChildren() }
-	for i, child in ipairs(children) do
-		child:Hide()
-		child:SetParent(nil)
-		child:ClearAllPoints()
-	end
-	SlackerChecker_Report_Button1:Hide()
-	SlackerChecker_Report_Button2:Hide()
-	SlackerChecker_Report_Title:SetText(title)
+	local f = CreateFrame("Frame", nil, UIParent, "SlackerChecker_Report")
+	f.Button1:Hide()
+	f.Button2:Hide()
+	f.Title:SetText(title)
 	local ScrollingTable = LibStub("ScrollingTable");
-	local tbl = ScrollingTable:CreateST(cols, 30, 18, nil, SlackerChecker_Report_Table)
+	local tbl = ScrollingTable:CreateST(cols, 30, 18, nil, f.Table)
 	tbl:SetData(data);
 	tbl:Refresh();
 	tbl:Show();
 	local width = math.max(tbl.frame:GetWidth()+40, 200)
 	if btn1 ~= nil
 	then
-		SlackerChecker_Report_Button1:SetText(btn1.text)
-		SlackerChecker_Report_Button1:SetScript("OnClick", btn1.callback)
-		SlackerChecker_Report_Button1:Show()
+		f.Button1:SetText(btn1.text)
+		f.Button1:SetScript("OnClick", btn1.callback)
+		f.Button1:Show()
 	end
 	if btn2 ~= nil
 	then
-		SlackerChecker_Report_Button2:SetText(btn1.text)
-		SlackerChecker_Report_Button2:SetScript("OnClick", btn1.callback)
-		SlackerChecker_Report_Button2:Show()
+		f.Button2:SetText(btn1.text)
+		f.Button2:SetScript("OnClick", btn1.callback)
+		f.Button2:Show()
 	end
-	SlackerChecker_Report:SetWidth(width)
-	SlackerChecker_Report:Show()
-	
+	f:SetWidth(width)
+	f:Show()
 end
 
 SlackerChecker_Frame_ReportContext = function(parent, index, index2)
@@ -739,14 +740,14 @@ local function CalculateAward(buffs, class, timestamp)
 			count = count+1
 		end
 	end
-	if dmt==3
+	if 2<=dmt
 	then
 		count = count+1
 	end
-	if dmfup and count==6
+	if dmfup and 6<=count
 	then
 		return 50
-	elseif not dmfup and count==5
+	elseif not dmfup and 5<=count
 	then
 		return 50
 	elseif 3<=count
@@ -769,7 +770,6 @@ local function CalculateAward2(buffs, class, timestamp)
 end
 
 GenerateReport = function(id, data)
-	print(id)
 	if id=="snap-worldbuffs"
 	then
 		local cols = { 
@@ -811,7 +811,7 @@ GenerateReport = function(id, data)
 			})
 		end
 		local datatable = {}
-		set=data["p"]
+		local set=data["p"]
 		for i=1,#set,1
 		do
 			local offlinetext = ""
@@ -924,7 +924,7 @@ GenerateReport = function(id, data)
 			})
 		end
 		local datatable = {}
-		set=data["p"]
+		local set=data["p"]
 		for i=1,#set,1
 		do
 			local offlinetext = ""
@@ -989,6 +989,276 @@ GenerateReport = function(id, data)
 				table.insert(row["cols"], 4, awrd)
 			end
 			table.insert(datatable, row)
+		end
+		ShowReport(id, cols, datatable)
+	elseif id=="snap-missing-buffs"
+	then
+		local cols = { 
+			{
+				["name"] = "Name",
+				["width"] = 84,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Class",
+				["width"] = 60,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Gr",
+				["width"] = 20,
+				["align"] = "LEFT",
+				["sort"] = "dsc",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Druid",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Mage",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Priest",
+				["width"] = 60,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Warr",
+				["width"] = 40,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+			{
+				["name"] = "Other",
+				["width"] = 80,
+				["align"] = "LEFT",
+				["comparesort"] = NoSort,
+				["DoCellUpdate"] = DoCellUpdateBuff
+			}, 
+		}
+		local datatable = {}
+		local set=data["p"]
+		for i=1,#set,1
+		do
+			local offlinetext = ""
+			local color = ClassToColor(set[i]["c"])
+			if set[i]["o"] == 0 
+			then 
+				offlinetext=" (off)" 
+				color = ClassToColor("Offline")
+			end
+			local name = {
+				["value"] = string.format("%s%s",set[i]["n"], offlinetext),
+				["color"] = color
+			}
+			local class = {
+				["value"] = set[i]["c"],
+				["color"] = color
+			}
+			local group = {
+				["value"] = set[i]["g"]
+			}
+			local druid = {}
+			local mage = {}
+			local priest = {}
+			local warr = {}
+			local other = {}
+			for j=1,#set[i]["b"],1
+			do
+				local b = set[i]["b"][j]
+				local bid = b["id"]
+				local p = SlackerChecker_BuffPriorityLookup[tostring(b["id"])] or 0
+				if bid==9885 or bid==21850 -- motw
+				then
+					table.insert(druid, b)
+				elseif bid==10157 or bid==23028 -- int
+				then
+					table.insert(mage, b)
+				elseif bid==10938 or bid==21564 or bid==27841 or bid==27681 -- fort, spirit
+				then
+					table.insert(priest, b)
+				elseif bid==25289 -- battle shout
+				then
+					table.insert(warr, b)
+				elseif 
+					bid==11767 or bid==20765 or bid==10958 or bid==27683 or bid==20190 or -- soulstone, blood pact, shadow prot, hunter resist aura 
+					bid==10535 or bid==10477 or bid==10599 or bid==10405 or bid==15110 or -- shaman resist/prot totems
+					bid==19900 or bid==19898 or bid==19896 or bid==10293 -- paladin resist/prot auras
+				then
+					table.insert(other, b)
+				end
+			end
+			druid = {["value"] = druid}
+			mage = {["value"] = mage}
+			priest = {["value"] = priest}
+			warr = {["value"] = warr}
+			other = {["value"] = other}
+			local row = { ["cols"] = {name, class, group, druid, mage, priest, warr, other} }
+			table.insert(datatable, row)
+		end
+		ShowReport(id, cols, datatable)
+	elseif id=="raid-missing-buffs"
+	then
+		local cols = { 
+			{
+				["name"] = "Ind",
+				["width"] = 50,
+				["align"] = "LEFT",
+				["sort"] = "dsc",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Snapshot",
+				["width"] = 150,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Gr",
+				["width"] = 20,
+				["align"] = "LEFT",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "MotW",
+				["width"] = 60,
+				["align"] = "CENTER",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Intellect",
+				["width"] = 60,
+				["align"] = "CENTER",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Fortitude",
+				["width"] = 60,
+				["align"] = "CENTER",
+				["defaultsort"] = "asc",
+			}, 
+			{
+				["name"] = "Spirit",
+				["width"] = 60,
+				["align"] = "CENTER",
+				["defaultsort"] = "asc",
+			} 
+		}
+		local datatable = {}
+		local set=data["data"]
+		for i=1,#set,1
+		do
+			local reason = set[i]["r"]
+			if string.starts(reason, "Pull on ") then
+				local snap = {
+					["value"] = reason
+				}
+				local players = set[i]["p"]
+				local groups = {}
+				local classes = {}
+				for j=1,#players,1
+				do
+					local player = players[j]
+					local group = tostring(player["g"])
+					if groups[group]==nil
+					then
+						groups[group] = {}
+					end
+					table.insert(groups[group], player)
+					classes[player["c"]] = true
+				end
+				for group,members in pairs(groups)
+				do
+					local group = tonumber(group)
+					local index = {
+						["value"] = string.format("%03d.%d",i, group)
+					}
+					local grp = {
+						["value"] = group
+					}
+					local need =  { ["motw"] = 0, ["int"] = 0, ["stam"] = 0, ["spirit"] = 0 }
+					local have =  { ["motw"] = 0, ["int"] = 0, ["stam"] = 0, ["spirit"] = 0 }
+					for j=1,#members,1
+					do
+						local class = members[j]["c"]
+						local isCaster = 0
+						if class=="Druid" or class=="Mage" or class=="Hunter" or class=="Priest" or class=="Shaman" or class=="Warlock" -- is caster
+						then
+							isCaster = 1
+						end
+						need["motw"] = need["motw"] + 1
+						need["stam"] = need["stam"] + 1
+						need["int"] = need["int"] + isCaster
+						need["spirit"] = need["spirit"] + isCaster
+						for k=1,#members[j]["b"],1
+						do
+							local bid = members[j]["b"][k]["id"]
+							if bid==9885 or bid==21850 -- motw
+							then
+								have["motw"] = have["motw"] + 1
+							elseif bid==10157 or bid==23028 -- int
+							then
+								have["int"] = have["int"] + isCaster
+							elseif bid==10938 or bid==21564 -- fort
+							then
+								have["stam"] = have["stam"] + 1
+							elseif bid==27841 or bid==27681 -- spirit
+							then
+								have["spirit"] = have["spirit"] + isCaster
+							end
+						end
+					end
+					local haveClass =  { ["motw"] = classes["Druid"], ["int"] = classes["Mage"], ["stam"] = classes["Priest"], ["spirit"] = classes["Priest"] }
+					local text =  { ["motw"] = "0", ["int"] = "0", ["stam"] = "0", ["spirit"] = "0" }
+					local color =  { ["motw"] = nil, ["int"] = nil, ["stam"] = nil, ["spirit"] =nil }
+					for i,v in ipairs({"motw", "int", "stam", "spirit"})
+					do
+						if haveClass[v] and 0<need[v]
+						then
+							text[v] = string.format("%d/%d",have[v],need[v])
+							color[v] = { ["r"] = 0.14, ["g"] = 0.53, ["b"] = 0.14, ["a"] = 1.0 } -- green
+							if have[v]==0
+							then
+								color[v] = { ["r"] = 0.82, ["g"] = 0.13, ["b"] = 0.18, ["a"] = 1.0 } -- red
+							elseif have[v]<need[v]
+							then
+								color[v] = { ["r"] = 1.0, ["g"] = 0.75, ["b"] = 0.0, ["a"] = 1.0 } -- amber
+							end
+						end
+					end
+					local motw = {
+						["value"] = text["motw"],
+						["color"] = color["motw"]
+					}
+					local int = {
+						["value"] = text["int"],
+						["color"] = color["int"]
+					}
+					local stam = {
+						["value"] = text["stam"],
+						["color"] = color["stam"]
+					}
+					local spirit = {
+						["value"] = text["spirit"],
+						["color"] = color["spirit"]
+					}
+					local row = { ["cols"] = {index, snap, grp, motw, int, stam, spirit} }
+					table.insert(datatable, row)
+				end
+			end
 		end
 		ShowReport(id, cols, datatable)
 	else

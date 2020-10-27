@@ -1,7 +1,7 @@
 ## Interface:11304
 ## Title: SlackerChecker
 ## Author: Deathbaron
-## Version: 0.9
+## Version: 0.10
 ## Notes: TODO: add notes.
 ## OptionalDeps: DBM-Core
 ## SavedVariables: SlackerChecker_DB

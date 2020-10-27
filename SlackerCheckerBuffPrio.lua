@@ -89,6 +89,7 @@ SlackerChecker_BuffPriorityLookup = {
 	["16327"] = p.CONS,  -- Juju Guile
 	["16329"] = p.CONS,  -- Juju Might
 	["22789"] = p.CONS,  -- Gordok Green Grog
+	["22790"] = p.CONS,  -- Kreeg's Stout Beatdown
 	-- food
 	["22730"] = p.FOOD, -- Runn Tum Tuber Surprise
 	["22731"] = p.FOOD, -- Runn Tum Tuber Surprise
@@ -114,6 +115,7 @@ SlackerChecker_BuffPriorityLookup = {
 	["27681"] = p.BUFF, -- Prayer of Spirit
 	["27841"] = p.BUFF, -- Divine Spirit
 	["27683"] = p.BUFF, -- Prayer of Shadow Protection
+	["10958"] = p.BUFF, -- Shadow Protection
 	["21850"] = p.BUFF, -- Gift of the Wild
 	["9885"]  = p.BUFF, -- Mark of the Wild
 	["23028"] = p.BUFF, -- Arcane Brilliance
