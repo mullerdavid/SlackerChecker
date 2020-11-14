@@ -1,0 +1,158 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Frame name="SlackerUI_SettingTemplate" virtual="true">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString inherits="GameFontNormalLarge" text="SlackerChecker Settings" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="20" y="-20"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="Database maintenance" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="20" y="-50"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" text="Record smaller instances" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="45" y="-116"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" text="Debug" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="45" y="-148"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentkey="MaintainDropdown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="5" y="-66"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnShow>
+						UIDropDownMenu_SetWidth(self, 180);
+					</OnShow>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Database maintenance policy.\nAutomatically deletes older entries on load.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<CheckButton parentkey="PartyCheckbox" inherits="ChatConfigCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="17" y="-110"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Allows recording buffs in smaller instances as well.\nNormally it records only in 20 or 40 player raids.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+			<CheckButton parentkey="DebugCheckbox" inherits="ChatConfigCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="17" y="-142"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Allows some debug functionality.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+		</Frames>
+	</Frame>
+	<Frame name="SlackerUI_SettingScriptTemplate" virtual="true">
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentkey="FunctionString" inherits="GameFontNormal" text="function()" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="20" y="-24"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontNormal" text="end" >
+					<Anchors>
+						<Anchor point="BOTTOMLEFT">
+							<Offset><AbsDimension x="20" y="14"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentkey="ExampleButton" inherits="UIPanelButtonTemplate" text="Example">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT">
+						<Offset><AbsDimension x="-34" y="-20"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Size>
+					<AbsDimension x="80" y="16" />
+				</Size>
+			</Button>
+			<Frame parentkey="ChildFrame">
+				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+					<BackgroundInsets>
+						<AbsInset left="4" right="4" top="4" bottom="4"/>
+					</BackgroundInsets>
+					<TileSize>
+						<AbsValue val="16"/>
+					</TileSize>
+					<EdgeSize>
+						<AbsValue val="16"/>
+					</EdgeSize>
+				</Backdrop>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="32" y="-36"/>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-34" y="24"/>
+				</Anchors>
+				<Scripts>
+					<OnShow>self:SetBackdropBorderColor(.6, .6, .6, 1); </OnShow>
+				</Scripts>
+				<Frames>
+					<ScrollFrame parentkey="ScrollFrame" inherits="UIPanelScrollFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="6" y="-6"/>
+							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-6" y="6"/>
+						</Anchors>
+						<ScrollChild>
+							<EditBox parentkey="EditBox" multiLine="true" autoFocus="true" >
+								<Scripts>
+									<OnShow> self:SetSize(self:GetParent():GetSize()); </OnShow>
+									<OnEscapePressed> self:ClearFocus()</OnEscapePressed>
+								</Scripts>
+								<FontString inherits="ChatFontNormal" />
+							</EditBox>
+						</ScrollChild>
+					</ScrollFrame>
+				</Frames>
+			</Frame>
+		</Frames>
+	</Frame>
+</Ui>

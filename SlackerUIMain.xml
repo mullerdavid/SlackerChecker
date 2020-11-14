@@ -1,6 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<!--Script file="SlackerChecker.lua"/-->
-	<Frame name="SlackerChecker_MenuEntry" virtual="true">
+	<Frame name="SlackerUI_MenuTemplate" virtual="true">
 		<Size x="200" y="32"/>
 		<Anchors>
 			<Anchor x="0" y="0"/>
@@ -28,7 +27,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button inherits="UIPanelSquareButton" parentKey="DeleteButton">
+			<Button inherits="UIPanelSquareButton" parentKey="DeleteButton" hidden="true">
 				<Anchors>
 					<Anchor point="TOPRIGHT">
 						<Offset x="0" y="-3"/>
@@ -41,8 +40,94 @@
 			<OnLeave> self.Background:Hide() </OnLeave>
 		</Scripts>
  	</Frame>
-	<Frame name="SlackerChecker_Report" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true" virtual="true">
+	<Frame name="SlackerUI_CopyTemplate" parent="UIParent" toplevel="true" frameStrata="DIALOG" hidden="false" enableMouse="true" movable="true" clampedToScreen="true" resizable="true" virtual="true">
 		<Scripts>
+			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
+			<OnDragStart>self:StartMoving();</OnDragStart>
+			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
+        </Scripts>
+		<Size>
+			<AbsDimension x="640" y="480" />
+		</Size>
+		<ResizeBounds>
+			<minResize x="200" y="100"/>
+		</ResizeBounds>
+		<Anchors>
+			<Anchor point="CENTER" />
+		</Anchors>
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11"/>
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32"/>
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32"/>
+			</EdgeSize>
+		</Backdrop>
+		<Frames>
+			<Button inherits="UIPanelButtonTemplate" text="Select All">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset x="12" y="-12"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="96" y="16" />
+				</Size>
+				<Scripts>
+					<OnClick> local eb = self:GetParent().ScrollFrame.EditBox; eb:HighlightText(); eb:SetFocus() </OnClick>
+				</Scripts>
+			</Button>
+			<Button inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset x="-4" y="-4"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnClick> self:GetParent():Hide(); </OnClick>
+				</Scripts>
+			</Button>
+			<Button>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset x="-6" y="6"/>
+					</Anchor> 
+				</Anchors>
+				<Size>
+					<AbsDimension x="16" y="16" />
+				</Size>
+				<Scripts>
+					<OnMouseDown> if button == "LeftButton" then self:GetParent():StartSizing("BOTTOMRIGHT") end </OnMouseDown>	
+					<OnMouseUp> self:GetParent():StopMovingOrSizing() local sf=self:GetParent().ScrollFrame; sf.EditBox:SetSize(sf:GetSize()); </OnMouseUp>
+				</Scripts>
+				<NormalTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up"/> 
+				<HighlightTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight"/> 
+				<PushedTexture file="Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down"/> 
+			</Button>
+			<ScrollFrame parentkey="ScrollFrame" inherits="UIPanelScrollFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="16" y="-32"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="16" y="20"/>
+					<Anchor point="RIGHT" relativePoint="RIGHT" x="-34"/>
+				</Anchors>
+				<ScrollChild>
+					<EditBox parentkey="EditBox" multiLine="true" autoFocus="false" >
+						<Scripts>
+							<OnLoad>self:SetSize(self:GetParent():GetSize());</OnLoad>
+							<OnEscapePressed>self:ClearFocus()</OnEscapePressed>
+						</Scripts>
+						<FontString inherits="ChatFontNormal" />
+					</EditBox>
+				</ScrollChild>
+			</ScrollFrame>
+		</Frames>
+ 	</Frame>
+	<Frame name="SlackerUI_MainWindow" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true" clampedToScreen="true">
+		<Scripts>
+			<OnShow>SlackerUI.MainWindow.OnShow();</OnShow>
 			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
 			<OnDragStart>self:StartMoving();</OnDragStart>
 			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
@@ -53,15 +138,6 @@
 		<Anchors>
 			<Anchor point="CENTER" />
 		</Anchors>
-		<Layers>
-			<Layer level="ARTWORK">
-				<FontString parentKey="Title" text="Title" inherits="GameFontHighlight"  >
-					<Anchors>
-						<Anchor point="TOP" x="0" y="-12" />
-					</Anchors>
-				</FontString>
-			</Layer>
-		</Layers>
 		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
 			<BackgroundInsets>
 				<AbsInset left="11" right="12" top="12" bottom="11"/>
@@ -84,9 +160,9 @@
 					<OnClick> self:GetParent():Hide(); </OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="Button1" inherits="UIPanelButtonTemplate" text="Button1">
+			<Button inherits="UIPanelButtonTemplate" text="Record">
 				<Anchors>
-					<Anchor point="TOPLeft">
+					<Anchor point="TOPLEFT">
 						<Offset x="12" y="-12"/>
 					</Anchor> 
 				</Anchors>
@@ -94,156 +170,99 @@
 					<AbsDimension x="64" y="16" />
 				</Size>
 				<Scripts>
+					<OnClick>SlackerCore.DoRecording("Manual recording");</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="Button2" inherits="UIPanelButtonTemplate" text="Button2">
+			<Button inherits="UIPanelButtonTemplate" text="Edit">
 				<Anchors>
-					<Anchor point="TOPLeft">
-						<Offset x="96" y="-12"/>
+					<Anchor point="TOPLEFT">
+						<Offset x="90" y="-12"/>
 					</Anchor> 
 				</Anchors>
 				<Size>
 					<AbsDimension x="64" y="16" />
 				</Size>
 				<Scripts>
+					<OnClick>SlackerUI.MainWindow.ToggleEdit();</OnClick>
 				</Scripts>
 			</Button>
-			<Frame parentKey="Table">
+			<Button inherits="UIPanelButtonTemplate" text="Reset">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="16" y="-38"/>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="16" y="8"/>
-					<Anchor point="RIGHT" relativePoint="RIGHT" x="-16"/>
-				</Anchors>
-			</Frame>
-		</Frames>
-	</Frame>
-	<Frame name="SlackerChecker_Frame" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true">
-		<Scripts>
-			<OnShow function="SlackerChecker_Frame_OnShow"/>
-			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
-			<OnDragStart>self:StartMoving();</OnDragStart>
-			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
-        </Scripts>
-		<Size>
-			<AbsDimension x="1024" y="640" />
-		</Size>
-		<Anchors>
-			<Anchor point="CENTER" />
-		</Anchors>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11"/>
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32"/>
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32"/>
-			</EdgeSize>
-		</Backdrop>
-		<Frames>
-			<Button name="$parent_ButtonClose" inherits="UIPanelCloseButton">
-				<Anchors>
-					<Anchor point="TOPRIGHT">
-						<Offset x="-4" y="-4"/>
-					</Anchor> 
-				</Anchors>
-				<Scripts>
-					<OnClick> self:GetParent():Hide(); </OnClick>
-				</Scripts>
-			</Button>
-			<Button name="$parent_ButtonRefresh" inherits="UIPanelButtonTemplate" text="Refresh">
-				<Anchors>
-					<Anchor point="TOPLeft">
-						<Offset x="12" y="-12"/>
+					<Anchor point="TOPLEFT">
+						<Offset x="168" y="-12"/>
 					</Anchor> 
 				</Anchors>
 				<Size>
 					<AbsDimension x="64" y="16" />
 				</Size>
 				<Scripts>
-					<OnClick function="SlackerChecker_Frame_OnShow"/>
+					<OnClick>SlackerUI.MainWindow.ResetDatabase();</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parent_ButtonReset" inherits="UIPanelButtonTemplate" text="Reset">
+			<Button inherits="UIPanelButtonTemplate" text="Settings">
 				<Anchors>
-					<Anchor point="TOPLeft">
-						<Offset x="96" y="-12"/>
+					<Anchor point="TOPLEFT">
+						<Offset x="246" y="-12"/>
 					</Anchor> 
 				</Anchors>
 				<Size>
 					<AbsDimension x="64" y="16" />
 				</Size>
 				<Scripts>
-					<OnClick function="SlackerChecker_Frame_Reset"/>
+					<OnClick> SlackerUI.Settings.OpenSettings(); </OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parent_ButtonExport" inherits="UIPanelButtonGrayTemplate" text="Export">
+			<Button inherits="UIPanelButtonTemplate" text="Export">
 				<Anchors>
-					<Anchor point="TOPLeft">
-						<Offset x="180" y="-12"/>
+					<Anchor point="TOPLEFT">
+						<Offset x="324" y="-12"/>
 					</Anchor> 
 				</Anchors>
 				<Size>
 					<AbsDimension x="64" y="16" />
 				</Size>
 				<Scripts>
-					<OnClick>print("NotImplemented");</OnClick>
+					<OnClick>SlackerUI.MainWindow.Export(self);</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parent_ButtonReport" inherits="UIPanelButtonTemplate" text="Report">
+			<Button inherits="UIPanelButtonTemplate" text="Report">
 				<Anchors>
-					<Anchor point="TOPLeft">
-						<Offset x="264" y="-12"/>
+					<Anchor point="TOPLEFT">
+						<Offset x="402" y="-12"/>
 					</Anchor> 
 				</Anchors>
 				<Size>
 					<AbsDimension x="64" y="16" />
 				</Size>
 				<Scripts>
-					<OnClick>SlackerChecker_Frame_ReportContext(self);</OnClick>
+					<OnClick>SlackerUI.MainWindow.Report(self); </OnClick>
 				</Scripts>
 			</Button>
-			<Button name="$parent_ButtonManual" inherits="UIPanelButtonTemplate" text="Record">
-				<Anchors>
-					<Anchor point="TOPLeft">
-						<Offset x="348" y="-12"/>
-					</Anchor> 
-				</Anchors>
-				<Size>
-					<AbsDimension x="64" y="16" />
-				</Size>
-				<Scripts>
-					<OnClick>SlackerChecker_DoRecording("Manual recording"); SlackerChecker_Frame_OnShow(); </OnClick>
-				</Scripts>
-			</Button>
-			<Frame name="$parent_ContextMenu" inherits="UIDropDownMenuTemplate">
-			</Frame>
-			<ScrollFrame name="$parent_InstanceList" inherits="UIPanelScrollFrameTemplate">
+			<ScrollFrame parentkey="DungeonList" inherits="UIPanelScrollFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="16" y="-32"/>
 					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="16" y="16"/>
 					<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent" x="216"/>
 				</Anchors>
 				<ScrollChild>
-					<Frame name="$parent_ScrollChild">
+					<Frame parentkey="ScrollChildFrame">
 						<Size x="200" y="100"/>
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
-			<ScrollFrame name="$parent_DataList" inherits="UIPanelScrollFrameTemplate">
+			<ScrollFrame parentkey="SnapshotList" inherits="UIPanelScrollFrameTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="248" y="-32"/>
 					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="248" y="16"/>
 					<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent" x="448"/>
 				</Anchors>
 				<ScrollChild>
-					<Frame name="$parent_ScrollChild">
+					<Frame parentkey="ScrollChildFrame">
 						<Size x="200" y="100"/>
 					</Frame>
 				</ScrollChild>
 			</ScrollFrame>
-			<Frame name="$parent_PlayerList">
+			<Frame parentkey="PlayerList">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$parent" x="490" y="-32"/>
 					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent" x="490" y="16"/>

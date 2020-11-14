@@ -1,14 +1,23 @@
 ## Interface:11304
 ## Title: SlackerChecker
 ## Author: Deathbaron
-## Version: 0.10
-## Notes: TODO: add notes.
-## OptionalDeps: DBM-Core
-## SavedVariables: SlackerChecker_DB
+## Version: 1.0
+## Notes: SlackerChecker is a buff tracking addon for raids.
+## OptionalDeps: DBM-Core, LibDataBroker-1.1
+## SavedVariables: SlackerChecker_DB, SlackerChecker_Settings, SlackerChecker_Version
 
 Libs\LibStub\LibStub.lua
 Libs\lib-st\lib-st.xml
 
-SlackerCheckerBuffPrio.lua
-SlackerChecker.lua
-SlackerChecker.xml
+SlackerHelper.lua
+SlackerBuffInfo.lua
+SlackerInstanceInfo.lua
+SlackerData.lua
+SlackerUI.lua
+SlackerUISettings.lua
+SlackerUISettings.xml
+SlackerUIReports.lua
+SlackerUIReports.xml
+SlackerUIMain.lua
+SlackerUIMain.xml
+SlackerCore.lua
