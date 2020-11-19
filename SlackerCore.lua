@@ -127,7 +127,7 @@ local function ProcessCommand(msg)
 			local snapshot = SlackerCore.DoRecording("Report "..args)
 			if snapshot
 			then
-				print("GenerateReport(\"snpashot\", args, snapshot)")
+				SlackerUI.Reports.GenerateReport("snapshot", args, snapshot)
 			end
 		else
 			SlackerHelper.error("Invalid report id")

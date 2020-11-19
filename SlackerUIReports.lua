@@ -1,6 +1,7 @@
 SlackerUI.Reports = {}
 SlackerUI.Reports.ReportData = nil
 SlackerUI.Reports.ReportAvailable = nil
+SlackerUI.Reports.GenerateReport = nil
 
 function SlackerUI.Reports.ReportAvailable(typ, id)
 	for i=1,#SlackerUI.Reports.ReportData,1
@@ -12,6 +13,20 @@ function SlackerUI.Reports.ReportAvailable(typ, id)
 		end
 	end
 	return false
+end
+
+function SlackerUI.Reports.GenerateReport(typ, id, data)
+	for i=1,#SlackerUI.Reports.ReportData,1
+	do
+		local report = SlackerUI.Reports.ReportData[i]
+		if (report.type==typ and report.id==id)
+		then
+			local report = SlackerUI.Reports.ReportData[i]
+			report.func(data)
+			return
+		end
+	end
+	SlackerHelper.error("No report found.")
 end
 
 local function ShowReport(title, cols, data, btn1, btn2)
@@ -560,6 +575,9 @@ local function SnapshotMissingBuffs(data)
 				table.insert(other, b)
 			end
 		end
+		name = { ["value"] = name, ["color"] = color }
+		class = { ["value"] = class, ["color"] = color }
+		group = { ["value"] = group }
 		druid = {["value"] = druid}
 		mage = {["value"] = mage}
 		priest = {["value"] = priest}

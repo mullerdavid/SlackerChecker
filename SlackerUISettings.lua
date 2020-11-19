@@ -135,7 +135,7 @@ local helperinfo = [[
 -- You can use various helper functions as well
 -- 
 -- SlackerHelper.in_array(needle, array)
---   returns true if need found in the array
+--   returns true if needle found in the array
 --
 -- SlackerHelper.array_intersect(array1, array2)
 --   returns the elements found in both arrays in a new array
