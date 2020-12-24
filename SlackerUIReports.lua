@@ -130,7 +130,7 @@ local function DungeonMissingBuffs(data)
 	for snapshot in data:get_snapshots_iterator()
 	do
 		local reason = snapshot:get_reason()
-		if string.starts(reason, "Pull on ") 
+		if SlackerHelper.starts_with(reason, "Pull on ") 
 		then
 			i = i+1
 			local snap = {

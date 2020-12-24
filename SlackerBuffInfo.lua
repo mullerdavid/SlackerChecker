@@ -117,6 +117,10 @@ lookup_buff_priority = {
 	[16329] = p.CONS,  -- Juju Might
 	[22789] = p.CONS,  -- Gordok Green Grog
 	[22790] = p.CONS,  -- Kreeg's Stout Beatdown
+	[25804] = p.CONS,  -- Rumsey Rum Black Label
+	[25722] = p.CONS,  -- Rumsey Rum Dark
+	[20875] = p.CONS,  -- Rumsey Rum
+	[25037] = p.CONS,  -- Rumsey Rum Light
 	-- food
 	[22730] = p.FOOD, -- Runn Tum Tuber Surprise
 	[22731] = p.FOOD, -- Runn Tum Tuber Surprise
