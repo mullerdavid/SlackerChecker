@@ -8,6 +8,7 @@
 
 Libs\LibStub\LibStub.lua
 Libs\lib-st\lib-st.xml
+Libs\LibJSON-1.0\lib.xml
 
 SlackerHelper.lua
 SlackerBuffInfo.lua

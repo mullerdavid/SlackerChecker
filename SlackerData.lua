@@ -47,6 +47,10 @@ SlackerData.Snapshot = nil
 SlackerData.Player = nil
 SlackerData.Buff = nil
 
+--[[ Locals ]]--
+
+local LibJSON = LibStub("LibJSON-1.0") 
+
 --[[ Buff ]]--
 
 local Buff = {}
@@ -221,13 +225,7 @@ function Player.serialize(self, frmt)
 		end
 	else -- json
 		local data = self.data
-		local buffs = data["b"]
-		local tmp = {}
-		for i = 1,#buffs,1
-		do
-			table.insert(tmp, buffs[i]["id"])
-		end
-		return string.format("{\"i\": %d,\"n\": \"%s\",\"c\": \"%s\",\"g\": %d,\"o\": %d,\"b\": [%s]}",data["i"],data["n"],data["c"],data["g"],data["o"],table.concat(tmp,","))
+		return LibJSON.Serialize(data)
 	end
 end
 
@@ -336,12 +334,7 @@ function Snapshot.serialize(self, frmt)
 		end
 	else -- json
 		local data = self.data
-		local tmp = {}
-		for player in self:get_players_iterator()
-		do
-			table.insert(tmp, player:serialize("json"))
-		end
-		return string.format("{\n\"d\": %d,\n\"r\": \"%s\",\n\"uuid\": \"%s\",\n\"p\": [\n%s\n]\n}",data["d"],data["r"],data["uuid"],table.concat(tmp,",\n"))
+		return LibJSON.Serialize(data)
 	end
 end
 
@@ -527,15 +520,7 @@ function Dungeon.serialize(self, frmt)
 		end
 	else -- json
 		local data = self.data
-		local tmp = {}
-		for snapshot in self:get_snapshots_iterator()
-		do
-			table.insert(tmp, snapshot:serialize("json"))
-		end
-		return string.format(
-			"{\n\"owner\": \"%s\",\n\"date\": %d,\n\"iname\": \"%s\",\n\"iid\": %d,\n\"zid\": %d,\n\"reset\": %d,\n\"uuid\": \"%s\",\n\"ver\": \"%s\",\n\"snap\": [\n%s\n]\n}",
-			data["owner"],data["date"],data["iname"],data["iid"],data["zid"],data["reset"],data["uuid"],data["ver"],table.concat(tmp,",\n")
-		)
+		return LibJSON.Serialize(data)
 	end
 end
 
@@ -862,12 +847,7 @@ function Database.serialize(self, frmt)
 		end
 	else -- json
 		local data = self.data
-		local tmp = {}
-		for dungeon in self:get_dungeons_iterator()
-		do
-			table.insert(tmp, dungeon:serialize("json"))
-		end
-		return string.format("[\n%s\n]",table.concat(tmp,",\n"))
+		return LibJSON.Serialize(data)
 	end
 end
 
