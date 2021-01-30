@@ -295,7 +295,12 @@ end
 
 local function ShowCopyTemplate(str)
 	local f = CreateFrame("Frame", nil, UIParent, "SlackerUI_CopyTemplate")
-	f.ScrollFrame.EditBox:SetText(str)
+	local eb = f.ScrollFrame.EditBox
+	if (#str>1000000)
+	then
+		eb:SetMultiLine(false)
+	end
+	eb:SetText(str)
 	f:Show()
 end
 

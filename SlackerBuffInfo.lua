@@ -24,8 +24,8 @@ function SlackerHelper.get_buff_priority(buffid)
 end
 
 function SlackerHelper.buff_compare(first, second)
-	firstprio = SlackerHelper.get_buff_priority(first)
-	secondprio = SlackerHelper.get_buff_priority(second)
+	local firstprio = SlackerHelper.get_buff_priority(first)
+	local secondprio = SlackerHelper.get_buff_priority(second)
 	if (firstprio ~= secondprio)
 	then
 		return firstprio > secondprio
