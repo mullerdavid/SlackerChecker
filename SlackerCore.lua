@@ -161,7 +161,16 @@ local function DBMCallback(event, mod)
 	then
 		name = mod["id"]
 	end
-	SlackerCore.DoRecording(action .. " on " .. name)
+	if action == "Pull" and SlackerHelper.get_setting("record_pull")
+	then
+		SlackerCore.DoRecording("Pull on " .. name)
+	elseif action == "Wipe" and SlackerHelper.get_setting("record_wipe")
+	then
+		SlackerCore.DoRecording("Wipe on " .. name)
+	elseif action == "Kill" and SlackerHelper.get_setting("record_kill")
+	then
+		SlackerCore.DoRecording("Kill on " .. name)
+	end
 end
 
 local function RegisterDBM()
@@ -265,13 +274,17 @@ local function Init()
 		AddSlideIcon()
 		SlackerUI.MainWindow.SetDatabase(Database)
 		SlackerUI.Settings.RegisterFrames()
+		SlackerHelper.load_colors()
 		SlashCmdList[SlackerHelper.Addon] = ProcessCommand
 		RegisterDBM()
 	end
 end
 
 local function OnReadyCheck()
-	SlackerCore.DoRecording("Ready Check")
+	if SlackerHelper.get_setting("record_readycheck")
+	then
+		SlackerCore.DoRecording("Ready Check")
+	end
 end
 
 local function OnEvent(self, event, arg1)

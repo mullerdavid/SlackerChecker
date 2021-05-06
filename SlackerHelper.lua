@@ -6,7 +6,7 @@ SlackerChecker_Settings = nil
 
 local random = math.random
 local lookup_default_settings = nil
-local lookup_class_color = nil
+local lookup_class_color = {}
 local lookup_instance_map_id = nil
 
 SlackerHelper = {}
@@ -127,6 +127,49 @@ function SlackerHelper.ends_with(str, ending)
 	return ending == "" or str:sub(-#ending) == ending
 end
 
+function SlackerHelper.load_colors()
+	local lookup_class_color_classic = {
+		["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50, ["a"] = 1.0 },
+		["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04, ["a"] = 1.0 },
+		["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45, ["a"] = 1.0 },
+		["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94, ["a"] = 1.0 },
+		["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73, ["a"] = 1.0 },
+		["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00, ["a"] = 1.0 },
+		["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41, ["a"] = 1.0 },
+		["Shaman"]  = { ["r"] = 0.00, ["g"] = 0.44, ["b"] = 0.87, ["a"] = 1.0 },
+		["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79, ["a"] = 1.0 },
+		["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43, ["a"] = 1.0 },
+	}
+	local lookup_class_color_retail = {
+		["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50, ["a"] = 1.0 },
+		["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04, ["a"] = 1.0 },
+		["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45, ["a"] = 1.0 },
+		["Mage"]    = { ["r"] = 0.25, ["g"] = 0.78, ["b"] = 0.92, ["a"] = 1.0 },
+		["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73, ["a"] = 1.0 },
+		["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00, ["a"] = 1.0 },
+		["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41, ["a"] = 1.0 },
+		["Shaman"]  = { ["r"] = 0.00, ["g"] = 0.44, ["b"] = 0.87, ["a"] = 1.0 },
+		["Warlock"] = { ["r"] = 0.53, ["g"] = 0.53, ["b"] = 0.93, ["a"] = 1.0 },
+		["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43, ["a"] = 1.0 },
+	}
+	local key = SlackerHelper.get_setting("classcolors")
+	if key == "classic"
+	then
+		lookup_class_color = lookup_class_color_classic
+	elseif key == "classic_mod"
+	then
+		lookup_class_color = lookup_class_color_classic
+		lookup_class_color["Shaman"] = lookup_class_color["Paladin"]
+	elseif key == "retail"
+	then
+		lookup_class_color = lookup_class_color_retail
+	elseif key == "retail_mod"
+	then
+		lookup_class_color = lookup_class_color_retail
+		lookup_class_color["Shaman"] = lookup_class_color["Paladin"]
+	end
+end
+
 function SlackerHelper.class_to_color(class_str)
 	if lookup_class_color[class_str]
 	then
@@ -203,22 +246,14 @@ lookup_default_settings = {
 	["party"] = false,
 	["debug"] = false,
 	["dbmaintain"] = "time30",
+	["classcolors"] = "classic",
+	["record_readycheck"] = true,
+	["record_pull"] = true,
+	["record_kill"] = false,
+	["record_wipe"] = false,
 	["script_report_worldbuff"] = "",
 	["script_report_consume"] = "",
 	["script_award"] = "",
-}
-
-lookup_class_color = {
-	["Offline"] = { ["r"] = 0.50, ["g"] = 0.50, ["b"] = 0.50, ["a"] = 1.0 },
-	["Druid"]   = { ["r"] = 1.00, ["g"] = 0.49, ["b"] = 0.04, ["a"] = 1.0 },
-	["Hunter"]  = { ["r"] = 0.67, ["g"] = 0.83, ["b"] = 0.45, ["a"] = 1.0 },
-	["Mage"]    = { ["r"] = 0.41, ["g"] = 0.80, ["b"] = 0.94, ["a"] = 1.0 },
-	["Paladin"] = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73, ["a"] = 1.0 },
-	["Priest"]  = { ["r"] = 1.00, ["g"] = 1.00, ["b"] = 1.00, ["a"] = 1.0 },
-	["Rogue"]   = { ["r"] = 1.00, ["g"] = 0.96, ["b"] = 0.41, ["a"] = 1.0 },
-	["Shaman"]  = { ["r"] = 0.96, ["g"] = 0.55, ["b"] = 0.73, ["a"] = 1.0 },
-	["Warlock"] = { ["r"] = 0.58, ["g"] = 0.51, ["b"] = 0.79, ["a"] = 1.0 },
-	["Warrior"] = { ["r"] = 0.78, ["g"] = 0.61, ["b"] = 0.43, ["a"] = 1.0 },
 }
 
 lookup_instance_map_id = {

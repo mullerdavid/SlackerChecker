@@ -57,9 +57,12 @@ lookup_buff_priority = {
 	[23768] = p.DMF,   -- Sayge's Dark Fortune of Damage
 	[23769] = p.DMF,   -- Sayge's Dark Fortune of Resistance
 	-- worldbuffs        
+	[355366] = p.WB1,  -- Warchief's Blessing
 	[16609] = p.WB1,   -- Warchief's Blessing
+	[355363] = p.WB1,  -- Rallying Cry of the Dragonslayer
 	[22888] = p.WB1,   -- Rallying Cry of the Dragonslayer
 	[15366] = p.WB2,   -- Songflower Serenade
+	[355365] = p.WB3,  -- Spirit of Zandalar
 	[24425] = p.WB3,   -- Spirit of Zandalar
 	[22817] = p.WB4,   -- Fengus' Ferocity
 	[22818] = p.WB4,   -- Mol'dar's Moxie

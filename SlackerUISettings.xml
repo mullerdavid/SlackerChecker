@@ -16,17 +16,52 @@
 						</Anchor>
 					</Anchors>
 				</FontString>
+				<FontString inherits="GameFontNormal" text="Class colors" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="20" y="-116"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
 				<FontString inherits="GameFontHighlight" text="Record smaller instances" >
 					<Anchors>
 						<Anchor point="TOPLEFT">
-							<Offset><AbsDimension x="45" y="-116"/></Offset>
+							<Offset><AbsDimension x="45" y="-182"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" text="Record on Ready Check" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="45" y="-214"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" text="Record on Pull" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="45" y="-246"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" text="Record on Kill" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="45" y="-278"/></Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString inherits="GameFontHighlight" text="Record on Wipe" >
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset><AbsDimension x="45" y="-310"/></Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
 				<FontString inherits="GameFontHighlight" text="Debug" >
 					<Anchors>
 						<Anchor point="TOPLEFT">
-							<Offset><AbsDimension x="45" y="-148"/></Offset>
+							<Offset><AbsDimension x="45" y="-342"/></Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
@@ -52,10 +87,29 @@
 					</OnLeave>
 				</Scripts>
 			</Button>
+			<Button parentkey="ClassColorDropdown" inherits="UIDropDownMenuTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="5" y="-132"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnShow>
+						UIDropDownMenu_SetWidth(self, 180);
+					</OnShow>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Class coloring scheme.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</Button>
 			<CheckButton parentkey="PartyCheckbox" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset><AbsDimension x="17" y="-110"/></Offset>
+						<Offset><AbsDimension x="17" y="-176"/></Offset>
 					</Anchor>
 				</Anchors>
 				<Scripts>
@@ -68,10 +122,74 @@
 					</OnLeave>
 				</Scripts>
 			</CheckButton>
+			<CheckButton parentkey="RecordReadyCheckCheckbox" inherits="ChatConfigCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="17" y="-208"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Allows recording buffs on Ready Check.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+			<CheckButton parentkey="RecordPullCheckbox" inherits="ChatConfigCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="17" y="-240"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Allows recording buffs on Boss Pull.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+			<CheckButton parentkey="RecordKillCheckbox" inherits="ChatConfigCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="17" y="-272"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Allows recording buffs on Boss Wipe.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
+			<CheckButton parentkey="RecordWipeCheckbox" inherits="ChatConfigCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT">
+						<Offset><AbsDimension x="17" y="-304"/></Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Allows recording buffs on Boss Wipe.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</CheckButton>
 			<CheckButton parentkey="DebugCheckbox" inherits="ChatConfigCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT">
-						<Offset><AbsDimension x="17" y="-142"/></Offset>
+						<Offset><AbsDimension x="17" y="-336"/></Offset>
 					</Anchor>
 				</Anchors>
 				<Scripts>

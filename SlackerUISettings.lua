@@ -66,6 +66,13 @@ local maintainvalues  = {
 	[9] = { value="time180", text = "Keep last 180 days"},
 };
 
+local colorvalues  = {
+	[1] = { value="classic", text = "Classic"},
+	[2] = { value="classic_mod", text = "Classic (Pink shaman)"},
+	[3] = { value="retail", text = "Retail"},
+	[4] = { value="retail_mod", text = "Retail (Pink shaman)"},
+};
+
 function SlackerUI.Settings.MainLoadSettings(self)
 	local zelf = self
 	local dropdown = self.MaintainDropdown
@@ -96,6 +103,34 @@ function SlackerUI.Settings.MainLoadSettings(self)
 			end
 		end
 	)
+	local dropdown2 = self.ClassColorDropdown
+	local classcolors = SlackerHelper.get_setting("classcolors")
+	UIDropDownMenu_Initialize(
+		dropdown2, 
+		function(frame, level, menuList)
+			local found = false
+			for index, value in ipairs(colorvalues)
+			do
+				local info = UIDropDownMenu_CreateInfo()
+				info.text = value.text
+				info.value = value.value
+				info.func = function(self, value) 
+					UIDropDownMenu_SetSelectedValue(frame, self.value)
+					zelf.Changed = true
+				end
+				local entry = UIDropDownMenu_AddButton(info);
+				if value.value == classcolors
+				then
+					UIDropDownMenu_SetSelectedValue(dropdown2, value.value)
+					found = true
+				end
+			end
+			if not found 
+			then
+				UIDropDownMenu_SetSelectedValue(dropdown2, colorvalues[1].value)
+			end
+		end
+	)
 	local party = SlackerHelper.get_setting("party")
 	self.PartyCheckbox:HookScript("OnClick", 
 		function(self)
@@ -103,6 +138,34 @@ function SlackerUI.Settings.MainLoadSettings(self)
 		end
 	)
 	self.PartyCheckbox:SetChecked(party)
+	local record_readycheck = SlackerHelper.get_setting("record_readycheck")
+	self.RecordReadyCheckCheckbox:HookScript("OnClick", 
+		function(self)
+			zelf.Changed = true
+		end
+	)
+	self.RecordReadyCheckCheckbox:SetChecked(record_readycheck)
+	local record_pull = SlackerHelper.get_setting("record_pull")
+	self.RecordPullCheckbox:HookScript("OnClick", 
+		function(self)
+			zelf.Changed = true
+		end
+	)
+	self.RecordPullCheckbox:SetChecked(record_pull)
+	local record_kill = SlackerHelper.get_setting("record_kill")
+	self.RecordKillCheckbox:HookScript("OnClick", 
+		function(self)
+			zelf.Changed = true
+		end
+	)
+	self.RecordKillCheckbox:SetChecked(record_kill)
+	local record_wipe = SlackerHelper.get_setting("record_wipe")
+	self.RecordWipeCheckbox:HookScript("OnClick", 
+		function(self)
+			zelf.Changed = true
+		end
+	)
+	self.RecordWipeCheckbox:SetChecked(record_wipe)
 	local dbg = SlackerHelper.get_setting("debug")
 	self.DebugCheckbox:HookScript("OnClick", 
 		function(self)
@@ -118,10 +181,21 @@ function SlackerUI.Settings.MainSaveSettings(self)
 	then
 		local dbmaintain = UIDropDownMenu_GetSelectedValue(self.MaintainDropdown)
 		SlackerHelper.set_setting("dbmaintain", dbmaintain)
+		local classcolors = UIDropDownMenu_GetSelectedValue(self.ClassColorDropdown)
+		SlackerHelper.set_setting("classcolors", classcolors)
 		local party = self.PartyCheckbox:GetChecked()
 		SlackerHelper.set_setting("party", party)
+		local record_readycheck = self.RecordReadyCheckCheckbox:GetChecked()
+		SlackerHelper.set_setting("record_readycheck", record_readycheck)
+		local record_pull = self.RecordPullCheckbox:GetChecked()
+		SlackerHelper.set_setting("record_pull", record_pull)
+		local record_kill = self.RecordKillCheckbox:GetChecked()
+		SlackerHelper.set_setting("record_kill", record_kill)
+		local record_wipe = self.RecordWipeCheckbox:GetChecked()
+		SlackerHelper.set_setting("record_wipe", record_wipe)
 		local dbg = self.DebugCheckbox:GetChecked()
 		SlackerHelper.set_setting("debug", dbg)
+		SlackerHelper.load_colors()
 		self.Changed = false
 	end
 end
