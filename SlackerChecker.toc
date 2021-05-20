@@ -1,7 +1,7 @@
 ## Interface:20501
 ## Title: SlackerChecker
 ## Author: Deathbaron
-## Version: 1.3
+## Version: 1.4
 ## Notes: SlackerChecker is a buff tracking addon for raids.
 ## OptionalDeps: DBM-Core, LibDataBroker-1.1
 ## SavedVariables: SlackerChecker_DB, SlackerChecker_Settings, SlackerChecker_Version
