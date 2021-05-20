@@ -40,9 +40,19 @@
 			<OnLeave> self.Background:Hide() </OnLeave>
 		</Scripts>
  	</Frame>
-	<Frame name="SlackerUI_CopyTemplate" parent="UIParent" toplevel="true" frameStrata="DIALOG" hidden="false" enableMouse="true" movable="true" clampedToScreen="true" resizable="true" virtual="true">
+	<Frame name="SlackerUI_CopyTemplate" parent="UIParent" toplevel="true" frameStrata="DIALOG" hidden="false" enableMouse="true" movable="true" clampedToScreen="true" resizable="true" virtual="true" inherits="BackdropTemplate">
 		<Scripts>
-			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetBackdrop({
+					bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", 
+					edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+					tile = true,
+					tileSize = 32,
+					edgeSize = 32,
+					insets = {left = 11, right = 12, top = 12, bottom = 11},
+				})
+			</OnLoad>
 			<OnDragStart>self:StartMoving();</OnDragStart>
 			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
         </Scripts>
@@ -55,7 +65,7 @@
 		<Anchors>
 			<Anchor point="CENTER" />
 		</Anchors>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+		<!--Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
 			<BackgroundInsets>
 				<AbsInset left="11" right="12" top="12" bottom="11"/>
 			</BackgroundInsets>
@@ -65,7 +75,7 @@
 			<EdgeSize>
 				<AbsValue val="32"/>
 			</EdgeSize>
-		</Backdrop>
+		</Backdrop-->
 		<Frames>
 			<Button inherits="UIPanelButtonTemplate" text="Select All">
 				<Anchors>
@@ -125,10 +135,20 @@
 			</ScrollFrame>
 		</Frames>
  	</Frame>
-	<Frame name="SlackerUI_MainWindow" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true" clampedToScreen="true">
+	<Frame name="SlackerUI_MainWindow" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true" clampedToScreen="true" inherits="BackdropTemplate">
 		<Scripts>
 			<OnShow>SlackerUI.MainWindow.OnShow();</OnShow>
-			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetBackdrop({
+					bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", 
+					edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+					tile = true,
+					tileSize = 32,
+					edgeSize = 32,
+					insets = {left = 11, right = 12, top = 13, bottom = 11},
+				})
+			</OnLoad>
 			<OnDragStart>self:StartMoving();</OnDragStart>
 			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
         </Scripts>
@@ -138,7 +158,7 @@
 		<Anchors>
 			<Anchor point="CENTER" />
 		</Anchors>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+		<!-- Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
 			<BackgroundInsets>
 				<AbsInset left="11" right="12" top="12" bottom="11"/>
 			</BackgroundInsets>
@@ -148,7 +168,7 @@
 			<EdgeSize>
 				<AbsValue val="32"/>
 			</EdgeSize>
-		</Backdrop>
+		</Backdrop -->
 		<Frames>
 			<Button inherits="UIPanelCloseButton">
 				<Anchors>

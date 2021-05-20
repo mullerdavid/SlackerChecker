@@ -32,7 +32,7 @@ local function DoRecording(reason)
 	local reset = SlackerHelper.instance_get_reset(iname) 
 	local localtime = time()
 	local owner = UnitName("player");
-	local uuidprefix = SlackerHelper.int_to_hex(datetime,8).."-"..SlackerHelper.int_to_hex(zid,4)
+	local uuidprefix = SlackerHelper.int_to_hex(localtime,8).."-"..SlackerHelper.int_to_hex(zid,4)
 	local dungeon = Database:get_dungeon_matching(owner, localtime, zid, iid, reset)
 	if dungeon
 	then

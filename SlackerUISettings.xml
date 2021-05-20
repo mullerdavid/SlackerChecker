@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<Frame name="SlackerUI_SettingTemplate" virtual="true">
+	<Frame name="SlackerUI_SettingTemplate" virtual="true" >
 		<Layers>
 			<Layer level="OVERLAY">
 				<FontString inherits="GameFontNormalLarge" text="SlackerChecker Settings" >
@@ -234,8 +234,20 @@
 					<AbsDimension x="80" y="16" />
 				</Size>
 			</Button>
-			<Frame parentkey="ChildFrame">
-				<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+			<Frame parentkey="ChildFrame" inherits="BackdropTemplate">
+				<Scripts>
+					<OnLoad>
+						self:SetBackdrop({
+							bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", 
+							edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+							tile = true,
+							tileSize = 16,
+							edgeSize = 16,
+							insets = {left = 4, right = 4, top = 4, bottom = 4},
+						})
+					</OnLoad>
+				</Scripts>
+				<!--Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
 					<BackgroundInsets>
 						<AbsInset left="4" right="4" top="4" bottom="4"/>
 					</BackgroundInsets>
@@ -245,7 +257,7 @@
 					<EdgeSize>
 						<AbsValue val="16"/>
 					</EdgeSize>
-				</Backdrop>
+				</Backdrop-->
 				<Anchors>
 					<Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="32" y="-36"/>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-34" y="24"/>

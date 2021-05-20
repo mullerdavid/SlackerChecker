@@ -1,7 +1,17 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<Frame name="SlackerUI_ReportTemplate" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true" virtual="true">
+	<Frame name="SlackerUI_ReportTemplate" parent="UIParent" toplevel="true" hidden="true" enableMouse="true" movable="true" virtual="true" inherits="BackdropTemplate">
 		<Scripts>
-			<OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+				self:SetBackdrop({
+					bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", 
+					edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+					tile = true,
+					tileSize = 32,
+					edgeSize = 32,
+					insets = {left = 11, right = 12, top = 11, bottom = 11},
+				})
+			</OnLoad>
 			<OnDragStart>self:StartMoving();</OnDragStart>
 			<OnDragStop>self:StopMovingOrSizing();</OnDragStop>
         </Scripts>
@@ -20,7 +30,7 @@
 				</FontString>
 			</Layer>
 		</Layers>
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+		<!-- bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
 			<BackgroundInsets>
 				<AbsInset left="11" right="12" top="12" bottom="11"/>
 			</BackgroundInsets>
@@ -30,7 +40,7 @@
 			<EdgeSize>
 				<AbsValue val="32"/>
 			</EdgeSize>
-		</Backdrop>
+		</Backdrop -->
 		<Frames>
 			<Button inherits="UIPanelCloseButton">
 				<Anchors>
