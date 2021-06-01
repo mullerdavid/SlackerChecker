@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+	th, td { white-space: nowrap; }
+	.wowhead-tooltip a b {color: rgb(255, 209, 0) !important;}
+	</style>
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css">
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js"></script>
+	<script>const whTooltips = {colorLinks: true, iconizeLinks: true, iconSize: 'small', renameLinks: false};</script>
+	<script src="https://wow.zamimg.com/widgets/power.js"></script>
+	<script>
+	
+	var uuid_report_consume = "7b02ce8b-0be9-4f49-8baa-bc9118b26c25"
+	var uuid_report_prot = "d1eff202-a6d6-4345-94ab-2b3405d50f12 "
+
+	var instance = null
+	var table = null
+	
+	var buff_priority = {
+		DMF: 20,
+		WB1: 19,
+		WB2: 18,
+		WB3: 17,
+		WB4: 16,
+		FLASK: 15,
+		ZANZA: 14,
+		GPROT: 13,
+		PROT: 12,
+		CONS: 10,
+		FOOD: 9,
+		BUFF: 8,
+		AURA: 7,
+		OTHER: 0,
+	}
+	var lookup_buff_priority = null
+	function get_buff_priority(buffid)
+	{
+		if (typeof buffid === "object")
+		{
+			buffid = buffid["id"]
+		}
+		return lookup_buff_priority[buffid] || 0
+	}
+	
+	function buff_compare(first, second)
+	{
+		if (typeof first === "object")
+		{
+			first = first["id"]
+		}
+		if (typeof second === "object")
+		{
+			second = second["id"]
+		}
+		var firstprio = lookup_buff_priority[first] || 0
+		var secondprio = lookup_buff_priority[second] || 0
+		if (firstprio != secondprio)
+		{
+			return firstprio < secondprio
+		}
+		return first > second
+	}
+	
+	function reset_table()
+	{
+		var t = $('#buffs')
+		t.replaceWith( "<table id=\"buffs\" class=\"stripe row-border order-column\"></table>" );
+		table = null
+	}
+
+	function load(json) 
+	{
+		instance = JSON.parse(json)
+		
+		var select = $("#snap");
+		select.empty();
+		select.append($('<option>', { value: "", text : "" }));
+		select.append($('<option>', { 
+			value: uuid_report_consume,
+			text : "Consumes report" 
+		}));
+		select.append($('<option>', { 
+			value: uuid_report_prot,
+			text : "Prot report" 
+		}));
+		for (i = 0; i < instance["snap"].length; i++) 
+		{
+			var snap = instance["snap"][i]
+			var d = new Date(snap["d"]*1000)
+			select.append($('<option>', { 
+				value: snap["uuid"],
+				text : d.toLocaleString() + " " + snap["r"] 
+			}));
+		} 
+		
+		select.value = "";
+	}
+	
+	function render_buff(data, type)
+	{
+		if (type === 'display') 
+		{
+			if (Array.isArray(data))
+			{
+				var buffs = ""
+				for (j = 0; j < data.length; j++) 
+				{
+					var buffid = data[j]
+					if (typeof buffid === "object")
+					{
+						buffid = buffid["id"]
+					}
+					buffs += "<a href=\"https://classic.wowhead.com/spell="+buffid+"&buff\"></a>"
+				}
+				return buffs
+			}
+		}
+		return data;
+	}
+	
+	function select_report_pulls_filter(filter)
+	{
+		var columns = [ 
+			{title: "Name"}, 
+			{title: "Class"}
+		]
+		var players = {};
+		var pulls = [];
+		var data = [];
+		
+		for (i = 0; i < instance["snap"].length; i++) 
+		{
+			var snap = instance["snap"][i]
+			if (snap["r"].startsWith("Pull on "))
+			{
+				pulls.push(snap)
+				for (j = 0; j < snap["p"].length; j++) 
+				{
+					var player = snap["p"][j]
+					players[player["n"]] = [player["n"], player["c"]]
+				} 
+			}
+		}
+			
+		for (i = 0; i < pulls.length; i++) 
+		{
+			var snap = pulls[i]
+			columns.push({title: snap["r"].substring(8), className: "break", orderable: false,  render: render_buff })
+			
+			for (var p in players) 
+			{
+				players[p].push("n/a")
+			}
+			for (j = 0; j < snap["p"].length; j++) 
+			{
+				var player = snap["p"][j]
+				var b = []
+				for (k = 0; k < player["b"].length; k++) 
+				{
+					var id = player["b"][k]
+					if (filter(id))
+					{
+						b.push(id)
+					}
+				}
+				b.sort(buff_compare)
+				players[player["n"]][2+i] = (player["o"]==0 ? "off" : b)
+			} 
+		}
+			
+		for (var p in players) 
+		{
+			var tmp = players[p]
+			data.push(players[p])
+		}
+		
+		reset_table()
+		table = $('#buffs').DataTable(
+		{
+			destroy: true,
+			paging: false, 
+			searching: false, 
+			bInfo : false,
+			columns: columns,
+			data: data,
+			order: [[ 1, "asc" ], [ 0, "asc" ]],
+		});
+		
+		$WowheadPower.refreshLinks();
+	}
+	
+	function select_report_consume()
+	{
+		var f = function(id)
+		{
+			var prio = get_buff_priority(id)
+			return (prio>=buff_priority["FOOD"] && prio<=buff_priority["CONS"])
+		}
+		select_report_pulls_filter(f)
+	}
+	
+	function select_report_prot()
+	{
+		var f = function(id)
+		{
+			var prio = get_buff_priority(id)
+			return (prio>=buff_priority["PROT"] && prio<=buff_priority["GPROT"])
+		}
+		select_report_pulls_filter(f)
+	}
+
+	function select_snapshot(uuid) 
+	{
+		var snap = null
+		for (i = 0; i < instance["snap"].length; i++) 
+		{
+			var tmp = instance["snap"][i]
+			if (tmp["uuid"] == uuid)
+			{
+				snap = tmp
+				break
+			}
+		}
+		if (! snap)
+		{
+			return
+		}
+		
+		var data = []
+		for (i = 0; i < snap["p"].length; i++) 
+		{
+			var player = snap["p"][i]
+			var offline = (player["o"]==0 ? " (off)" : "")
+			var b = player["b"]
+			b.sort(buff_compare)
+			data.push([ player["n"]+offline, player["c"], player["g"], b ])
+		} 
+		
+		reset_table()
+		table = $('#buffs').DataTable(
+		{
+			destroy: true,
+			paging: false, 
+			searching: false, 
+			bInfo : false,
+			columns: [ 
+				{title: "Name",  width: "200"}, 
+				{title: "Class",  width: "100"}, 
+				{title: "Gr", width: "20"}, 
+				{title: "Buffs", orderable: false,  render: render_buff }
+			],
+			data: data
+		});
+		
+		$WowheadPower.refreshLinks();
+	}
+	
+	function select(uuid) 
+	{
+		switch(uuid) 
+		{
+			case uuid_report_consume:
+				select_report_consume()
+				break;
+			case uuid_report_prot:
+				select_report_prot()
+				break;
+			default:
+				select_snapshot(uuid)
+		} 
+	}
+
+var p = buff_priority
+lookup_buff_priority = {
+	// dmf
+	23735: p["DMF"],   // Sayge's Dark Fortune of Strength
+	23736: p["DMF"],   // Sayge's Dark Fortune of Agility
+	23737: p["DMF"],   // Sayge's Dark Fortune of Stamina
+	23738: p["DMF"],   // Sayge's Dark Fortune of Spirit
+	23766: p["DMF"],   // Sayge's Dark Fortune of Intelligence
+	23767: p["DMF"],   // Sayge's Dark Fortune of Armor
+	23768: p["DMF"],   // Sayge's Dark Fortune of Damage
+	23769: p["DMF"],   // Sayge's Dark Fortune of Resistance
+	// worldbuffs        
+	16609: p["WB1"],   // Warchief's Blessing
+	22888: p["WB1"],   // Rallying Cry of the Dragonslayer
+	15366: p["WB2"],   // Songflower Serenade
+	24425: p["WB3"],   // Spirit of Zandalar
+	22817: p["WB4"],   // Fengus' Ferocity
+	22818: p["WB4"],   // Mol'dar's Moxie
+	22820: p["WB4"],   // Slip'kik's Savvy
+	15123: p["WB4"],   // Resist Fire UBRS
+	// flask
+	17624: p["FLASK"], // Flask of Petrification
+	17626: p["FLASK"], // Flask of the Titans
+	17627: p["FLASK"], // Flask of Distilled Wisdom
+	17628: p["FLASK"], // Flask of Supreme Power
+	17629: p["FLASK"], // Flask of Chromatic Resistance
+	// zanza/blasted lands
+	10667: p["ZANZA"], // R.O.I.D.S.
+	10668: p["ZANZA"], // Lung Juice Cocktail
+	10669: p["ZANZA"], // Ground Scorpok Assay
+	10692: p["ZANZA"], // Cerebral Cortex Compound
+	10693: p["ZANZA"], // Gizzard Gum
+	24382: p["ZANZA"], // Spirit of Zanza
+	24383: p["ZANZA"], // Swiftness of Zanza
+	24417: p["ZANZA"], // Sheen of Zanza
+	// prot potions
+	17543: p["GPROT"], // Greater Fire Protection Potion
+	17544: p["GPROT"], // Greater Frost Protection Potion
+	17545: p["GPROT"], // Greater Holy Protection Potion
+	17546: p["GPROT"], // Greater Nature Protection Potion 
+	17548: p["GPROT"], // Greater Shadow Protection Potion 
+	17549: p["GPROT"], // Greater Arcane Protection Potion
+	7233:  p["PROT"],  // Fire Protection Potion
+	7239:  p["PROT"],  // Frost Protection Potion
+	7242:  p["PROT"],  // Shadow Protection Potion 
+	7245:  p["PROT"],  // Holy Protection Potion
+	7254:  p["PROT"],  // Nature Protection Potion 
+	// consumes
+	11405: p["CONS"],  // Elixir of the Giants
+	17038: p["CONS"],  // Winterfall Firewater
+	17538: p["CONS"],  // Elixir of the Mongoose
+	11334: p["CONS"],  // Elixir of Greater Agility
+	11390: p["CONS"],  // Arcane Elixir
+	11474: p["CONS"],  // Elixir of Shadow Power
+	26276: p["CONS"],  // Elixir of Greater Firepower
+	21920: p["CONS"],  // Elixir of Frost Power
+	17539: p["CONS"],  // Greater Arcane Elixir
+	17535: p["CONS"],  // Elixir of the Sages
+	11348: p["CONS"],  // Elixir of Superior Defense
+	3593:  p["CONS"],  // Elixir of Fortitude
+	3223:  p["CONS"],  // Mighty Troll's Blood Potion
+	24373: p["CONS"],  // Major Troll's Blood Potion
+	24363: p["CONS"],  // Mageblood Potion
+	16321: p["CONS"],  // Juju Escape
+	16322: p["CONS"],  // Juju Flurry
+	16323: p["CONS"],  // Juju Power
+	16325: p["CONS"],  // Juju Chill
+	16326: p["CONS"],  // Juju Ember
+	16327: p["CONS"],  // Juju Guile
+	16329: p["CONS"],  // Juju Might
+	22789: p["CONS"],  // Gordok Green Grog
+	22790: p["CONS"],  // Kreeg's Stout Beatdown
+	25804: p["CONS"],  // Rumsey Rum Black Label
+	25722: p["CONS"],  // Rumsey Rum Dark
+	20875: p["CONS"],  // Rumsey Rum
+	25037: p["CONS"],  // Rumsey Rum Light
+	// food
+	22730: p["FOOD"], // Runn Tum Tuber Surprise
+	22731: p["FOOD"], // Runn Tum Tuber Surprise
+	24800: p["FOOD"], // Smoked Desert Dumplings
+	24799: p["FOOD"], // Smoked Desert Dumplings
+	18192: p["FOOD"], // Grilled Squid
+	18230: p["FOOD"], // Grilled Squid
+	19709: p["FOOD"], // Hot Wolf Ribs / Barbecued Buzzard Wing / etc
+	5007:  p["FOOD"], // Hot Wolf Ribs / Barbecued Buzzard Wing / etc
+	19710: p["FOOD"], // Tender Wolf Steak / Spiced Chili Crab / etc
+	10256: p["FOOD"], // Tender Wolf Steak / Spiced Chili Crab / etc
+	18233: p["FOOD"], // Nightfin Soup
+	18194: p["FOOD"], // Nightfin Soup
+	25660: p["FOOD"], // Dirge's Kickin' Chimaerok Chops
+	25661: p["FOOD"], // Dirge's Kickin' Chimaerok Chops
+	15852: p["FOOD"], // Dragonbreath Chili
+	18124: p["FOOD"], // Blessed Sunfruit
+	18125: p["FOOD"], // Blessed Sunfruit
+	// buffs
+	20765: p["BUFF"], // Soulstone Resurrection
+	21564: p["BUFF"], // Prayer of Fortitude
+	10938: p["BUFF"], // Power Word: Fortitude
+	27681: p["BUFF"], // Prayer of Spirit
+	27841: p["BUFF"], // Divine Spirit
+	27683: p["BUFF"], // Prayer of Shadow Protection
+	10958: p["BUFF"], // Shadow Protection
+	21850: p["BUFF"], // Gift of the Wild
+	9885:  p["BUFF"], // Mark of the Wild
+	23028: p["BUFF"], // Arcane Brilliance
+	10157: p["BUFF"], // Arcane Intellect
+	// auras/totems
+	17007: p["AURA"], // Leader of the Pack
+	24907: p["AURA"], // Leader of the Pack
+	20906: p["AURA"], // Trueshot Aura
+	13159: p["AURA"], // Aspect of the Pack
+	20190: p["AURA"], // Aspect of the Wild
+	10293: p["AURA"], // Devotion Aura
+	19746: p["AURA"], // Concentration Aura
+	19900: p["AURA"], // Fire Resistance Aura
+	19898: p["AURA"], // Frost Resistance Aura
+	19896: p["AURA"], // Shadow Resistance Aura
+	10301: p["AURA"], // Retribution Aura
+	20218: p["AURA"], // Sanctity Aura
+	10441: p["AURA"], // Strength of Earth
+	25909: p["AURA"], // Tranquil Air
+	10535: p["AURA"], // Fire Resistance
+	10477: p["AURA"], // Frost Resistance
+	10599: p["AURA"], // Nature Resistance
+	10405: p["AURA"], // Stoneskin
+	15110: p["AURA"], // Windwall
+	10626: p["AURA"], // Grace of Air
+	24853: p["AURA"], // Mana Spring
+	17360: p["AURA"], // Mana Tide
+	10461: p["AURA"], // Healing Stream
+	11767: p["AURA"], // Blood Pact
+	25289: p["AURA"], // Battle Shout
+}
+
+	$( document ).ready(function() 
+	{
+		if (window.location.hash) 
+		{
+			$.ajax({ url: window.location.hash.substring(1)+".json", dataType: "html"}).done(function(data){
+				document.getElementById('load').value=data
+				load(data)
+			});
+		} 
+	});
+
+	</script>
+</head>
+<body>
+
+<h1>Import</h1>
+<textarea id="load" name="load" rows="4" cols="50">
+</textarea>
+<br />
+<button type="button" onclick="load(document.getElementById('load').value )">Load</button> 
+
+<h1>Snapshot</h1>
+<select name="snap" id="snap" onchange="select(this.value)">
+	 <option value=""></option>
+</select>
+
+<h1>Table</h1>
+<table id="buffs" class="stripe row-border order-column"></table> 
+
+</body>
+</html>
