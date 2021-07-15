@@ -10,7 +10,7 @@ function SlackerHelper.instance_info(localtime)
 	local name, instance_type, _, _, max_players, _, _, instance_id = GetInstanceInfo()
 	if 
 		(is_party_alloved and (instance_type == "party" or instance_type == "raid") ) or
-		(not is_party_alloved and (instance_type == "raid" and max_players>=20) ) or
+		(not is_party_alloved and (instance_type == "raid" and (max_players>=20 or SlackerHelper.is_tbc())) ) or
 		(is_debug and instance_id == 389 )
 	then
 		ret = {}

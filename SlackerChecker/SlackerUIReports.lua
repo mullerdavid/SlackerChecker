@@ -179,16 +179,16 @@ local function DungeonMissingBuffs(data)
 						for k=1,#buffs,1
 						do
 							local b = buffs[k]
-							if b==9885 or b==21850 -- motw
+							if b==9885 or b==21850 or b==26991 or b==26990 -- motw
 							then
 								have["motw"] = have["motw"] + 1
-							elseif b==10157 or b==23028 -- int
+							elseif b==10157 or b==23028 or b==27127 or b==27126 -- int
 							then
 								have["int"] = have["int"] + isCaster
-							elseif b==10938 or b==21564 -- fort
+							elseif b==10938 or b==21564 or b==25389 or b==25392 -- fort
 							then
 								have["stam"] = have["stam"] + 1
-							elseif b==27841 or b==27681 -- spirit
+							elseif b==27841 or b==27681 or b==32999 or b==25312 -- spirit
 							then
 								have["spirit"] = have["spirit"] + isCaster
 							end
@@ -328,7 +328,7 @@ local function SnapshotWorldBuffs(data)
 	ShowReport(title, cols, datatable, btn1)
 end
 
-local function SnapshotConsumes(data)
+local function SnapshotConsumesClassic(data)
 	local CalculateAward = SlackerHelper.loadstring(SlackerHelper.get_setting("script_report_consume") or "", "script_report_consume")
 	local AwardPlayer = SlackerHelper.loadstring(SlackerHelper.get_setting("script_award") or "", "script_award")
 	local cols = { 
@@ -473,6 +473,134 @@ local function SnapshotConsumes(data)
 	ShowReport(title, cols, datatable, btn1)
 end
 
+local function SnapshotConsumesTBC(data)
+	local CalculateAward = SlackerHelper.loadstring(SlackerHelper.get_setting("script_report_consume") or "", "script_report_consume")
+	local AwardPlayer = SlackerHelper.loadstring(SlackerHelper.get_setting("script_award") or "", "script_award")
+	local cols = { 
+		{
+			["name"] = "Name",
+			["width"] = 84,
+			["align"] = "LEFT",
+			["sort"] = "dsc",
+			["defaultsort"] = "asc",
+		}, 
+		{
+			["name"] = "Class",
+			["width"] = 60,
+			["align"] = "LEFT",
+			["defaultsort"] = "asc",
+		}, 
+		{
+			["name"] = "Gr",
+			["width"] = 20,
+			["align"] = "LEFT",
+			["defaultsort"] = "asc",
+		}, 
+		{
+			["name"] = "Flask/Elixir",
+			["width"] = 120,
+			["align"] = "LEFT",
+			["comparesort"] = SlackerUI.ScrollTable.NoSort,
+			["DoCellUpdate"] = SlackerUI.ScrollTable.RenderBuffs
+		}, 
+		{
+			["name"] = "Food",
+			["width"] = 40,
+			["align"] = "LEFT",
+			["comparesort"] = SlackerUI.ScrollTable.NoSort,
+			["DoCellUpdate"] = SlackerUI.ScrollTable.RenderBuffs
+		}, 
+		{
+			["name"] = "Prot",
+			["width"] = 120,
+			["align"] = "LEFT",
+			["comparesort"] = SlackerUI.ScrollTable.NoSort,
+			["DoCellUpdate"] = SlackerUI.ScrollTable.RenderBuffs
+		}, 
+	}
+	if CalculateAward ~= nil
+	then
+		table.insert(cols, 4,
+		{
+			["name"] = "Award",
+			["width"] = 40,
+			["align"] = "LEFT",
+			["defaultsort"] = "asc",
+		})
+	end
+	local datatable = {}
+	local datetime = data:get_datetime()
+	for player in data:get_players_iterator()
+	do
+		local name = player:get_name()
+		local class = player:get_class()
+		local classstr = class
+		local group = player:get_group()
+		local buffs = player:get_all_buffs_idonly()
+		local offlinetext = ""
+		local color = SlackerHelper.class_to_color(class)
+		local flask = {}
+		local food = {}
+		local prot = {}
+		local all = {}
+		if not player:get_online()
+		then 
+			offlinetext=" (off)" 
+			color = SlackerHelper.class_to_color("Offline")
+		end
+		local buffsfiltered = {}
+		for i=1,#buffs,1
+		do
+			
+			local b = buffs[i]
+			local p = SlackerHelper.get_buff_priority(b)
+			if p==SlackerHelper.BuffPriority.FLASK or p==SlackerHelper.BuffPriority.GUARD or p==SlackerHelper.BuffPriority.BATTLE
+			then
+				table.insert(all, b)
+				table.insert(flask, b)
+			elseif p==SlackerHelper.BuffPriority.GPROT or p==SlackerHelper.BuffPriority.PROT
+			then
+				table.insert(all, b)
+				table.insert(prot, b)
+			elseif p==SlackerHelper.BuffPriority.FOOD
+			then
+				table.insert(all, b)
+				table.insert(food, b)
+			end
+		end
+		name = string.format("%s%s",name, offlinetext)
+		name = { ["value"] = name, ["color"] = color }
+		class = { ["value"] = class, ["color"] = color }
+		group = { ["value"] = group }
+		flask = {["value"] = flask}
+		food = {["value"] = food}
+		prot = {["value"] = prot}
+		local row = { ["cols"] = {name, class, group, flask, food, prot} }
+		if CalculateAward ~= nil
+		then
+			local awrd = { ["value"] = SlackerHelper.eval(CalculateAward, {class=classstr, buffs=all, timestamp=datetime}) }
+			table.insert(row["cols"], 4, awrd)
+		end
+		table.insert(datatable, row)
+	end
+	local title = "Consumes for "..data:get_reason()
+	local btn1 = nil
+	if CalculateAward and AwardPlayer
+	then
+		btn1 =AwardButton(datatable, 1, 4, AwardPlayer, "Consumes")
+	end
+	ShowReport(title, cols, datatable, btn1)
+end
+
+local function SnapshotConsumes(data)
+	if SlackerHelper.is_tbc()
+	then
+		return SnapshotConsumesTBC(data)
+	else
+		return SnapshotConsumesClassic(data)
+	end
+end
+
 local function SnapshotMissingBuffs(data)
 	local cols = { 
 		{
@@ -555,22 +683,22 @@ local function SnapshotMissingBuffs(data)
 		do
 			local b = buffs[i]
 			local p = SlackerHelper.get_buff_priority(b)
-			if SlackerHelper.in_array(b, {9885, 21850}) -- motw
+			if SlackerHelper.in_array(b, {9885, 21850, 26991, 26990}) -- motw
 			then
 				table.insert(druid, b)
-			elseif SlackerHelper.in_array(b, {10157, 23028}) -- int
+			elseif SlackerHelper.in_array(b, {10157, 23028, 27127, 27126}) -- int
 			then
 				table.insert(mage, b)
-			elseif SlackerHelper.in_array(b, {10938, 21564, 27841, 27681}) -- fort, spirit
+			elseif SlackerHelper.in_array(b, {10938, 21564, 27841, 27681, 25389, 25392, 32999, 25312}) -- fort, spirit
 			then
 				table.insert(priest, b)
-			elseif b==25289 -- battle shout
+			elseif SlackerHelper.in_array(b, {25289, 469, 2048}) -- shouts
 			then
 				table.insert(warr, b)
 			elseif 
-				SlackerHelper.in_array(b, {11767, 20765, 10958, 27683, 20190}) or -- soulstone, blood pact, shadow prot, hunter resist aura 
-				SlackerHelper.in_array(b, {10535, 10477, 10599, 10405, 15110}) or -- shaman resist/prot totems
-				SlackerHelper.in_array(b, {19900, 19898, 19896, 10293}) -- paladin resist/prot auras
+				SlackerHelper.in_array(b, {11767, 20765, 10958, 27683, 20190, 27488, 27239, 25433, 39374, 27045}) or -- soulstone, blood pact, shadow prot, hunter resist aura 
+				SlackerHelper.in_array(b, {10535, 10477, 10599, 10405, 15110, 25562, 25559, 25573, 25507, 25576}) or -- shaman resist/prot totems
+				SlackerHelper.in_array(b, {19900, 19898, 19896, 10293, 27153, 27152, 27151, 27149}) -- paladin resist/prot auras
 			then
 				table.insert(other, b)
 			end

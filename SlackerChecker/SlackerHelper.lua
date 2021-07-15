@@ -8,6 +8,7 @@ local random = math.random
 local lookup_default_settings = nil
 local lookup_class_color = {}
 local lookup_instance_map_id = nil
+local client_ver_major = nil
 
 SlackerHelper = {}
 SlackerHelper.date_format = "%Y-%m-%d %H:%M:%S"
@@ -16,6 +17,25 @@ SlackerHelper.Addon = "SlackerChecker"
 function SlackerHelper.debug(text)
 	print(text)
 end
+
+function SlackerHelper.game_version()
+	if client_ver_major == nil
+	then
+		client_ver_major = GetBuildInfo():match("%d")
+	end
+	return client_ver_major
+end
+
+function SlackerHelper.is_classic()
+	local ver = SlackerHelper.game_version()
+	return ver == "1"
+end
+
+function SlackerHelper.is_tbc()
+	local ver = SlackerHelper.game_version()
+	return ver == "2"
+end
+
 
 function SlackerHelper.info(text)
 	print(text)
@@ -183,7 +203,7 @@ function SlackerHelper.iid_to_str(iid)
 	then
 		return lookup_instance_map_id[iid]
 	end
-	return nil
+	return "Other"
 end
 
 function SlackerHelper.valid_creature(npc_id)
@@ -257,17 +277,66 @@ lookup_default_settings = {
 }
 
 lookup_instance_map_id = {
-	[0]="Eastern Kingdoms",
-	[1]="Kalimdor",
-	[389]="Ragefire Chasm",
-	[309]="Zul'Gurub ",
-	[509]="Ruins of Ahn'Qiraj",
-	[249]="Onyxia's Lair",
-	[409]="Molten Core",
-	[469]="Blackwing Lair",
-	[531]="Ahn'Qiraj",
-	[533]="Naxxramas"
-	--TODO: add dungeons
+	[0] = "Eastern Kingdoms ",
+	[1] = "Kalimdor ",
+	[33] = "Shadowfang Keep ",
+	[34] = "Stormwind Stockade ",
+	[35] = "StormwindPrison ",
+	[36] = "Deadmines ",
+	[43] = "Wailing Caverns ",
+	[44] = "Monastery ",
+	[47] = "Razorfen Kraul ",
+	[48] = "Blackfathom Deeps ",
+	[70] = "Uldaman ",
+	[90] = "Gnomeregan ",
+	[109] = "Sunken Temple ",
+	[129] = "Razorfen Downs ",
+	[169] = "Emerald Dream ",
+	[189] = "Scarlet Monastery",
+	[209] = "Zul'Farrak ",
+	[229] = "Blackrock Spire ",
+	[230] = "Blackrock Depths ",
+	[249] = "Onyxia's Lair ",
+	[269] = "Caverns of Time: Black Morass",
+	[289] = "Scholomance ",
+	[309] = "Zul'Gurub ",
+	[329] = "Stratholme ",
+	[349] = "Maraudon ",
+	[369] = "Deeprun Tram ",
+	[389] = "Ragefire Chasm ",
+	[409] = "Molten Core ",
+	[429] = "Dire Maul ",
+	[469] = "Blackwing Lair ",
+	[509] = "Ruins of Ahn'Qiraj ",
+	[530] = "Outland ",
+	[531] = "Ahn'Qiraj",
+	[532] = "Karazhan ",
+	[533] = "Naxxramas ",
+	[534] = "The Battle for Mount Hyjal ",
+	[540] = "Hellfire Citadel: The Shattered Halls ",
+	[542] = "Hellfire Citadel: The Blood Furnace ",
+	[543] = "Hellfire Citadel: Ramparts ",
+	[544] = "Magtheridon's Lair ",
+	[545] = "Coilfang: The Steamvault ",
+	[546] = "Coilfang: The Underbog ",
+	[547] = "Coilfang: The Slave Pens ",
+	[548] = "Coilfang: Serpentshrine Cavern ",
+	[550] = "Tempest Keep ",
+	[552] = "Tempest Keep: The Arcatraz ",
+	[553] = "Tempest Keep: The Botanica ",
+	[554] = "Tempest Keep: The Mechanar ",
+	[555] = "Auchindoun: Shadow Labyrinth ",
+	[556] = "Auchindoun: Sethekk Halls ",
+	[557] = "Auchindoun: Mana-Tombs ",
+	[558] = "Auchindoun: Auchenai Crypts ",
+	[559] = "Nagrand Arena (old) ",
+	[560] = "Caverns of Time: Old Hillsbrad Foothills",
+	[564] = "Black Temple ",
+	[565] = "Gruul's Lair ",
+	[568] = "Zul'Aman ",
+	[580] = "The Sunwell ",
+	[585] = "Magisters' Terrace ",
+	[598] = "Sunwell Fix (Unused) ",
 }
 
 -- credit fir NIT for tables

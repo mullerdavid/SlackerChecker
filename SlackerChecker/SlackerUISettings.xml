@@ -115,7 +115,12 @@
 				<Scripts>
 					<OnEnter>
 						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
-						GameTooltip:SetText("Allows recording buffs in smaller instances as well.\nNormally it records only in 20 or 40 player raids.");
+						if SlackerHelper.is_tbc()
+						then
+							GameTooltip:SetText("Allows recording buffs in smaller instances as well.\nNormally it records only in 10 or more player raids.");
+						else
+							GameTooltip:SetText("Allows recording buffs in smaller instances as well.\nNormally it records only in 20 or 40 player raids.");
+						end
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
